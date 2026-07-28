@@ -17,6 +17,7 @@ struct SiteConfig: Codable, Identifiable {
     ]
 }
 
+@MainActor
 final class UsageTracker: ObservableObject {
     @Published var todayUsage: DailyUsage
     @Published var siteConfigs: [SiteConfig]
@@ -55,9 +56,6 @@ final class UsageTracker: ObservableObject {
         store.save(todayUsage)
 
         checkBudget(host: normalizedHost)
-        DispatchQueue.main.async { [weak self] in
-            self?.objectWillChange.send()
-        }
     }
 
     func seconds(for host: String) -> Double {

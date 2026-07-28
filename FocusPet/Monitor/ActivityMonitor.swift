@@ -1,11 +1,10 @@
 import AppKit
 import ApplicationServices
-import Combine
 
+@MainActor
 final class ActivityMonitor {
     private let usageTracker: UsageTracker
     private var timer: Timer?
-    private var lastHost: String?
 
     init(usageTracker: UsageTracker) {
         self.usageTracker = usageTracker
@@ -13,7 +12,7 @@ final class ActivityMonitor {
 
     func start() {
         timer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { [weak self] _ in
-            self?.tick()
+            Task { @MainActor [weak self] in self?.tick() }
         }
         RunLoop.main.add(timer!, forMode: .common)
     }
@@ -25,11 +24,7 @@ final class ActivityMonitor {
 
     private func tick() {
         guard AccessibilityPermission.isGranted else { return }
-        guard let host = frontmostBrowserHost() else {
-            lastHost = nil
-            return
-        }
-        lastHost = host
+        guard let host = frontmostBrowserHost() else { return }
         usageTracker.record(host: host, at: Date())
     }
 
@@ -38,12 +33,12 @@ final class ActivityMonitor {
               let bundleID = frontApp.bundleIdentifier,
               let browser = Browser(rawValue: bundleID) else { return nil }
 
-        // Get window title via AX API as fallback input for title parser
         let axApp = AXUIElementCreateApplication(frontApp.processIdentifier)
         var windowValue: AnyObject?
         AXUIElementCopyAttributeValue(axApp, kAXFocusedWindowAttribute as CFString, &windowValue)
         var titleValue: AnyObject?
         if let window = windowValue {
+            // Safe: AXUIElement is a CFTypeRef, cast is always valid here
             AXUIElementCopyAttributeValue(window as! AXUIElement, kAXTitleAttribute as CFString, &titleValue)
         }
         let title = (titleValue as? String) ?? ""

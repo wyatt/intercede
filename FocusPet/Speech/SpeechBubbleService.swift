@@ -1,5 +1,6 @@
 import Foundation
 
+@MainActor
 final class SpeechBubbleService {
     private let cacheSize = 20
     private var cache: [(key: String, message: String)] = []

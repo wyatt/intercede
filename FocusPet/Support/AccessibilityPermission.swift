@@ -1,6 +1,7 @@
 import AppKit
 import ApplicationServices
 
+@MainActor
 enum AccessibilityPermission {
     static var isGranted: Bool {
         AXIsProcessTrustedWithOptions(nil)
@@ -8,7 +9,8 @@ enum AccessibilityPermission {
 
     static func requestIfNeeded() {
         guard !isGranted else { return }
-        let opts = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
+        // Use string literal to avoid concurrency-unsafe global ref
+        let opts = ["AXTrustedCheckOptionPrompt": true] as CFDictionary
         AXIsProcessTrustedWithOptions(opts)
     }
 }

@@ -2,6 +2,7 @@ import Foundation
 import AppKit
 
 // Manages the user's selected pet and bundled fallback sprites
+@MainActor
 final class PetLibrary: ObservableObject {
     @Published var selectedPetSlug: String {
         didSet { UserDefaults.standard.set(selectedPetSlug, forKey: "selectedPetSlug") }

@@ -1,6 +1,7 @@
 import AppKit
 import Combine
 
+@MainActor
 final class NudgeCoordinator {
     private let usageTracker: UsageTracker
     private let speechService = SpeechBubbleService()
@@ -15,13 +16,12 @@ final class NudgeCoordinator {
         petdex.fetchCatalog()
 
         usageTracker.budgetBreached
-            .receive(on: DispatchQueue.main)
+            .receive(on: RunLoop.main)
             .sink { [weak self] host in
                 self?.handleBreach(host: host)
             }
             .store(in: &cancellables)
 
-        // Pre-fetch at 80% budget
         usageTracker.$todayUsage
             .sink { [weak self] usage in
                 self?.checkPreFetch(usage: usage)
@@ -36,7 +36,7 @@ final class NudgeCoordinator {
         let used = usageTracker.seconds(for: host)
         let secondsOver = used - budget
 
-        Task { @MainActor in
+        Task {
             let message = await speechService.nudgeMessage(host: host, secondsOver: secondsOver)
             let screen = NSScreen.main ?? NSScreen.screens.first!
             let window = SpriteOverlayWindow(
@@ -54,7 +54,6 @@ final class NudgeCoordinator {
             let used = usage.seconds[config.host] ?? 0
             let threshold = config.dailyBudgetSeconds * 0.8
             if used >= threshold && used < config.dailyBudgetSeconds {
-                // Pre-warm cache so nudge is instant at breach
                 Task {
                     _ = await speechService.nudgeMessage(
                         host: config.host,
