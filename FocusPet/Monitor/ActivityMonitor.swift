@@ -7,6 +7,8 @@ final class ActivityMonitor: ObservableObject {
     private var timer: Timer?
 
     @Published var debugStatus: String = "starting…"
+    private(set) var lastBrowserPID: pid_t?
+    private(set) var lastBrowser: Browser?
 
     init(usageTracker: UsageTracker) {
         self.usageTracker = usageTracker
@@ -37,6 +39,8 @@ final class ActivityMonitor: ObservableObject {
             debugStatus = "not a browser: \(bundleID)"
             return
         }
+        lastBrowserPID = frontApp.processIdentifier
+        lastBrowser = browser
         guard let host = BrowserURLParser.extractHost(appPID: frontApp.processIdentifier, browser: browser) else {
             debugStatus = "URL extract failed (\(browser.rawValue))"
             return

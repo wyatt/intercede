@@ -15,16 +15,28 @@ enum Browser: String, CaseIterable {
 struct BrowserURLParser {
     // Primary: read URL from browser's accessibility tree (uses Accessibility permission only)
     static func extractHost(appPID: pid_t, browser: Browser) -> String? {
-        let axApp = AXUIElementCreateApplication(appPID)
-
-        var windowRef: AnyObject?
-        AXUIElementCopyAttributeValue(axApp, kAXFocusedWindowAttribute as CFString, &windowRef)
-        guard let window = windowRef as! AXUIElement? else { return nil }
+        guard let window = frontWindow(appPID: appPID) else { return nil }
 
         if let urlString = urlFromWindow(window, browser: browser),
            let host = host(from: urlString.hasPrefix("http") ? urlString : "https://\(urlString)") {
             return host
         }
+        return nil
+    }
+
+    // Returns the browser's main window regardless of whether it currently has focus
+    static func frontWindow(appPID: pid_t) -> AXUIElement? {
+        let axApp = AXUIElementCreateApplication(appPID)
+        // Try focused window first (works when browser is frontmost)
+        var ref: AnyObject?
+        AXUIElementCopyAttributeValue(axApp, kAXFocusedWindowAttribute as CFString, &ref)
+        if let w = ref { return (w as! AXUIElement) }
+        // Fallback: main window (works even when another app is focused)
+        AXUIElementCopyAttributeValue(axApp, kAXMainWindowAttribute as CFString, &ref)
+        if let w = ref { return (w as! AXUIElement) }
+        // Last resort: first window in window list
+        AXUIElementCopyAttributeValue(axApp, kAXWindowsAttribute as CFString, &ref)
+        if let windows = ref as? [AXUIElement], let first = windows.first { return first }
         return nil
     }
 
@@ -80,6 +92,32 @@ struct BrowserURLParser {
     static func looksLikeDomain(_ s: String) -> Bool {
         let pattern = #"^[a-z0-9]([a-z0-9\-]{0,61}[a-z0-9])?(\.[a-z]{2,}){1,3}(/.*)?$"#
         return s.range(of: pattern, options: [.regularExpression, .caseInsensitive]) != nil
+    }
+
+    // Diagnostic: dump AX tree roles+values for the frontmost browser window
+    static func dumpAXTree(appPID: pid_t) -> String {
+        guard let window = frontWindow(appPID: appPID) else { return "no window found (pid \(appPID))" }
+        var lines: [String] = []
+        dumpElement(window, depth: 0, maxDepth: 8, lines: &lines)
+        return lines.joined(separator: "\n")
+    }
+
+    private static func dumpElement(_ el: AXUIElement, depth: Int, maxDepth: Int, lines: inout [String]) {
+        guard depth <= maxDepth else { return }
+        let indent = String(repeating: "  ", count: depth)
+        var roleRef: AnyObject?; AXUIElementCopyAttributeValue(el, kAXRoleAttribute as CFString, &roleRef)
+        var valRef: AnyObject?; AXUIElementCopyAttributeValue(el, kAXValueAttribute as CFString, &valRef)
+        var descRef: AnyObject?; AXUIElementCopyAttributeValue(el, kAXDescriptionAttribute as CFString, &descRef)
+        var idRef: AnyObject?; AXUIElementCopyAttributeValue(el, "AXIdentifier" as CFString, &idRef)
+        let role = (roleRef as? String) ?? "?"
+        let val = (valRef as? String).map { v in v.count > 60 ? String(v.prefix(60)) + "…" : v } ?? ""
+        let desc = (descRef as? String) ?? ""
+        let id = (idRef as? String) ?? ""
+        lines.append("\(indent)[\(role)] id=\(id) desc=\(desc) val=\(val)")
+        var childrenRef: AnyObject?
+        AXUIElementCopyAttributeValue(el, kAXChildrenAttribute as CFString, &childrenRef)
+        guard let children = childrenRef as? [AXUIElement] else { return }
+        for child in children { dumpElement(child, depth: depth + 1, maxDepth: maxDepth, lines: &lines) }
     }
 
     static func host(from urlString: String) -> String? {

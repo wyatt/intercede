@@ -151,6 +151,16 @@ struct MenuBarPopoverView: View {
             Divider()
 
             HStack {
+                Button("Copy AX Tree") {
+                    if let pid = activityMonitor.lastBrowserPID {
+                        let dump = BrowserURLParser.dumpAXTree(appPID: pid)
+                        NSPasteboard.general.clearContents()
+                        NSPasteboard.general.setString(dump, forType: .string)
+                    }
+                }
+                .font(.system(size: 10, design: .monospaced))
+                .buttonStyle(.plain)
+                .foregroundColor(.secondary)
                 Spacer()
                 Button("Quit") { NSApp.terminate(nil) }
                     .font(.system(size: 11, design: .monospaced))
