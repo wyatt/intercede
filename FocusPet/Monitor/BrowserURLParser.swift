@@ -50,11 +50,11 @@ struct BrowserURLParser {
 
         case .chrome, .arc, .brave, .edge:
             // Chrome-family: address bar is an AXTextField in the toolbar (depth ≤ 6)
-            if let url = findURLTextField(in: window, depth: 0, maxDepth: 6) { return url }
+            if let url = findURLTextField(in: window, depth: 0, maxDepth: 10) { return url }
 
         case .firefox:
             // Firefox address bar accessible via AXTextField search
-            if let url = findURLTextField(in: window, depth: 0, maxDepth: 6) { return url }
+            if let url = findURLTextField(in: window, depth: 0, maxDepth: 10) { return url }
         }
         return nil
     }

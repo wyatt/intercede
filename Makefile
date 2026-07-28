@@ -2,7 +2,7 @@ DERIVED = $(HOME)/Library/Developer/Xcode/DerivedData
 APP_NAME = FocusPet
 SCHEME = FocusPet
 BUNDLE_ID = com.focuspet.app
-BUILD_DIR = $(shell xcodebuild -project $(APP_NAME).xcodeproj -scheme $(SCHEME) -configuration Debug -showBuildSettings 2>/dev/null | awk '/BUILT_PRODUCTS_DIR/{print $$3}')
+BUILD_DIR = $(shell xcodebuild -project $(APP_NAME).xcodeproj -scheme $(SCHEME) -configuration Debug -showBuildSettings 2>/dev/null | grep '^\s*BUILT_PRODUCTS_DIR' | head -1 | sed 's/.*= //')
 INSTALL_DIR = $(HOME)/Applications
 
 .PHONY: build install run clean reset-tcc
