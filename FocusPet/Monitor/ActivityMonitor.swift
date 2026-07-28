@@ -45,10 +45,9 @@ final class ActivityMonitor: ObservableObject {
         guard let host = BrowserURLParser.extractHost(appPID: frontApp.processIdentifier, browser: browser) else {
             let dump = BrowserURLParser.dumpAXTree(appPID: frontApp.processIdentifier)
             lastAXDump = dump
-            // Write to Desktop so user can inspect regardless of clipboard issues
             let dest = URL(fileURLWithPath: NSHomeDirectory()).appendingPathComponent("Desktop/focuspet-ax-debug.txt")
             try? dump.write(to: dest, atomically: true, encoding: .utf8)
-            debugStatus = "URL extract failed (\(browser.rawValue))"
+            debugStatus = "extract failed — raw: \(BrowserURLParser.rawAddressBarValue(appPID: frontApp.processIdentifier) ?? "nil")"
             return
         }
         debugStatus = "tracking: \(host)"
