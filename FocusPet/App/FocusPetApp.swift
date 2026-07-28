@@ -13,7 +13,7 @@ struct FocusPetApp: App {
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var menuBarController: MenuBarController?
-    private var activityMonitor: ActivityMonitor?
+    private(set) var activityMonitor: ActivityMonitor?
     private var usageTracker: UsageTracker?
     private var nudgeCoordinator: NudgeCoordinator?
 
@@ -21,9 +21,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.setActivationPolicy(.accessory)
 
         let usageTracker = UsageTracker()
-        let nudgeCoordinator = NudgeCoordinator(usageTracker: usageTracker)
         let activityMonitor = ActivityMonitor(usageTracker: usageTracker)
-        let menuBarController = MenuBarController(usageTracker: usageTracker)
+        let nudgeCoordinator = NudgeCoordinator(usageTracker: usageTracker)
+        let menuBarController = MenuBarController(usageTracker: usageTracker, activityMonitor: activityMonitor)
 
         self.usageTracker = usageTracker
         self.nudgeCoordinator = nudgeCoordinator

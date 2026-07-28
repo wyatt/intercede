@@ -6,10 +6,12 @@ final class MenuBarController: NSObject {
     private var statusItem: NSStatusItem!
     private var popover: NSPopover!
     private let usageTracker: UsageTracker
+    private let activityMonitor: ActivityMonitor
     private var settingsWindow: NSWindow?
 
-    init(usageTracker: UsageTracker) {
+    init(usageTracker: UsageTracker, activityMonitor: ActivityMonitor) {
         self.usageTracker = usageTracker
+        self.activityMonitor = activityMonitor
         super.init()
         setupStatusItem()
         setupPopover()
@@ -27,12 +29,14 @@ final class MenuBarController: NSObject {
 
     private func setupPopover() {
         popover = NSPopover()
-        popover.contentSize = NSSize(width: 280, height: 320)
+        popover.contentSize = NSSize(width: 280, height: 340)
         popover.behavior = .transient
         popover.contentViewController = NSHostingController(
-            rootView: MenuBarPopoverView(usageTracker: usageTracker, openSettings: { [weak self] in
-                self?.openSettings()
-            })
+            rootView: MenuBarPopoverView(
+                usageTracker: usageTracker,
+                activityMonitor: activityMonitor,
+                openSettings: { [weak self] in self?.openSettings() }
+            )
         )
     }
 
@@ -47,13 +51,11 @@ final class MenuBarController: NSObject {
 
     private func openSettings() {
         popover.performClose(nil)
-
         if let win = settingsWindow, win.isVisible {
             win.makeKeyAndOrderFront(nil)
             NSApp.activate(ignoringOtherApps: true)
             return
         }
-
         let win = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 420, height: 380),
             styleMask: [.titled, .closable],
@@ -86,6 +88,7 @@ final class MenuBarController: NSObject {
 
 struct MenuBarPopoverView: View {
     @ObservedObject var usageTracker: UsageTracker
+    @ObservedObject var activityMonitor: ActivityMonitor
     let openSettings: () -> Void
     @State private var axGranted = AccessibilityPermission.isGranted
 
@@ -111,8 +114,7 @@ struct MenuBarPopoverView: View {
                     NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!)
                 }) {
                     HStack(spacing: 6) {
-                        Image(systemName: "exclamationmark.triangle.fill")
-                            .foregroundColor(.orange)
+                        Image(systemName: "exclamationmark.triangle.fill").foregroundColor(.orange)
                         Text("Accessibility permission needed")
                             .font(.system(size: 11, design: .monospaced))
                     }
@@ -123,6 +125,22 @@ struct MenuBarPopoverView: View {
                 .buttonStyle(.plain)
                 .background(Color.orange.opacity(0.1))
             }
+
+            // Debug status row
+            HStack(spacing: 4) {
+                Circle()
+                    .fill(activityMonitor.debugStatus.hasPrefix("tracking") ? Color.green : Color.secondary.opacity(0.4))
+                    .frame(width: 6, height: 6)
+                Text(activityMonitor.debugStatus)
+                    .font(.system(size: 10, design: .monospaced))
+                    .foregroundColor(.secondary)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 4)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color.secondary.opacity(0.05))
 
             Divider()
 
@@ -142,5 +160,6 @@ struct MenuBarPopoverView: View {
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
         }
+        .onAppear { axGranted = AccessibilityPermission.isGranted }
     }
 }

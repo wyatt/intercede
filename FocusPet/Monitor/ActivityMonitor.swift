@@ -2,9 +2,11 @@ import AppKit
 import ApplicationServices
 
 @MainActor
-final class ActivityMonitor {
+final class ActivityMonitor: ObservableObject {
     private let usageTracker: UsageTracker
     private var timer: Timer?
+
+    @Published var debugStatus: String = "starting…"
 
     init(usageTracker: UsageTracker) {
         self.usageTracker = usageTracker
@@ -23,14 +25,23 @@ final class ActivityMonitor {
     }
 
     private func tick() {
-        guard let host = frontmostBrowserHost() else { return }
+        guard let frontApp = NSWorkspace.shared.frontmostApplication else {
+            debugStatus = "no frontmost app"
+            return
+        }
+        guard let bundleID = frontApp.bundleIdentifier else {
+            debugStatus = "no bundle ID"
+            return
+        }
+        guard let browser = Browser(rawValue: bundleID) else {
+            debugStatus = "not a browser: \(bundleID)"
+            return
+        }
+        guard let host = BrowserURLParser.extractHost(appPID: frontApp.processIdentifier, browser: browser) else {
+            debugStatus = "URL extract failed (\(browser.rawValue))"
+            return
+        }
+        debugStatus = "tracking: \(host)"
         usageTracker.record(host: host, at: Date())
-    }
-
-    private func frontmostBrowserHost() -> String? {
-        guard let frontApp = NSWorkspace.shared.frontmostApplication,
-              let bundleID = frontApp.bundleIdentifier,
-              let browser = Browser(rawValue: bundleID) else { return nil }
-        return BrowserURLParser.extractHost(appPID: frontApp.processIdentifier, browser: browser)
     }
 }
