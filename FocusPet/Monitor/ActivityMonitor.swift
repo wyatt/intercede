@@ -32,17 +32,6 @@ final class ActivityMonitor {
         guard let frontApp = NSWorkspace.shared.frontmostApplication,
               let bundleID = frontApp.bundleIdentifier,
               let browser = Browser(rawValue: bundleID) else { return nil }
-
-        let axApp = AXUIElementCreateApplication(frontApp.processIdentifier)
-        var windowValue: AnyObject?
-        AXUIElementCopyAttributeValue(axApp, kAXFocusedWindowAttribute as CFString, &windowValue)
-        var titleValue: AnyObject?
-        if let window = windowValue {
-            // Safe: AXUIElement is a CFTypeRef, cast is always valid here
-            AXUIElementCopyAttributeValue(window as! AXUIElement, kAXTitleAttribute as CFString, &titleValue)
-        }
-        let title = (titleValue as? String) ?? ""
-
-        return BrowserURLParser.extractHost(from: title, browser: browser)
+        return BrowserURLParser.extractHost(appPID: frontApp.processIdentifier, browser: browser)
     }
 }

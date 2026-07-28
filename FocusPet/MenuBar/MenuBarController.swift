@@ -40,6 +40,7 @@ final class MenuBarController: NSObject {
         if popover.isShown {
             popover.performClose(nil)
         } else if let button = statusItem.button {
+            NSApp.activate(ignoringOtherApps: true)
             popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
         }
     }
@@ -86,6 +87,7 @@ final class MenuBarController: NSObject {
 struct MenuBarPopoverView: View {
     @ObservedObject var usageTracker: UsageTracker
     let openSettings: () -> Void
+    @State private var axGranted = AccessibilityPermission.isGranted
 
     var body: some View {
         VStack(spacing: 0) {
@@ -101,6 +103,26 @@ struct MenuBarPopoverView: View {
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
             .background(Color.secondary.opacity(0.1))
+
+            if !axGranted {
+                Button(action: {
+                    AccessibilityPermission.requestIfNeeded()
+                    axGranted = AccessibilityPermission.isGranted
+                    NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!)
+                }) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .foregroundColor(.orange)
+                        Text("Accessibility permission needed")
+                            .font(.system(size: 11, design: .monospaced))
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .buttonStyle(.plain)
+                .background(Color.orange.opacity(0.1))
+            }
 
             Divider()
 

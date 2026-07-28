@@ -1,4 +1,5 @@
 import Foundation
+import ApplicationServices
 
 enum Browser: String, CaseIterable {
     case safari = "com.apple.Safari"
@@ -12,68 +13,77 @@ enum Browser: String, CaseIterable {
 }
 
 struct BrowserURLParser {
-    // Safari exposes "Page Title — example.com" or just the URL in some configs.
-    // Chrome/Arc expose page title only in window title.
-    // We check title for bare domain patterns first, then heuristic known-site matching.
-    static func extractHost(from windowTitle: String, browser: Browser) -> String? {
-        // Try AppleScript-based URL extraction first (most reliable)
-        if let url = appleScriptURL(for: browser) {
-            return host(from: url)
-        }
-        // Fallback: parse title
-        return parseHostFromTitle(windowTitle, browser: browser)
-    }
+    // Primary: read URL from browser's accessibility tree (uses Accessibility permission only)
+    static func extractHost(appPID: pid_t, browser: Browser) -> String? {
+        let axApp = AXUIElementCreateApplication(appPID)
 
-    // AppleScript URL fetch — synchronous, ~5ms, acceptable for 2s poll interval
-    static func appleScriptURL(for browser: Browser) -> String? {
-        let script: String
-        switch browser {
-        case .safari:
-            script = #"tell application "Safari" to if (count of windows) > 0 then get URL of current tab of front window"#
-        case .chrome:
-            script = #"tell application "Google Chrome" to if (count of windows) > 0 then get URL of active tab of front window"#
-        case .arc:
-            script = #"tell application "Arc" to if (count of windows) > 0 then get URL of active tab of front window"#
-        case .brave:
-            script = #"tell application "Brave Browser" to if (count of windows) > 0 then get URL of active tab of front window"#
-        case .edge:
-            script = #"tell application "Microsoft Edge" to if (count of windows) > 0 then get URL of active tab of front window"#
-        case .firefox:
-            // Firefox doesn't support AppleScript tab URL — fallback to title parsing
-            return nil
-        }
+        var windowRef: AnyObject?
+        AXUIElementCopyAttributeValue(axApp, kAXFocusedWindowAttribute as CFString, &windowRef)
+        guard let window = windowRef as! AXUIElement? else { return nil }
 
-        var error: NSDictionary?
-        let result = NSAppleScript(source: script)?.executeAndReturnError(&error)
-        guard error == nil, let urlString = result?.stringValue else { return nil }
-        return urlString
-    }
-
-    static func parseHostFromTitle(_ title: String, browser: Browser) -> String? {
-        // Safari often shows "Page Title - example.com" pattern
-        if browser == .safari {
-            let parts = title.components(separatedBy: " - ")
-            if let last = parts.last, looksLikeDomain(last.trimmingCharacters(in: .whitespaces)) {
-                return last.trimmingCharacters(in: .whitespaces)
-            }
-        }
-
-        // Try to find a bare domain anywhere in title
-        let words = title.components(separatedBy: .whitespaces)
-        for word in words {
-            if looksLikeDomain(word) { return word }
+        if let urlString = urlFromWindow(window, browser: browser),
+           let host = host(from: urlString.hasPrefix("http") ? urlString : "https://\(urlString)") {
+            return host
         }
         return nil
     }
 
+    private static func urlFromWindow(_ window: AXUIElement, browser: Browser) -> String? {
+        switch browser {
+        case .safari:
+            // Safari exposes AXDocument = current URL on the window
+            var docRef: AnyObject?
+            AXUIElementCopyAttributeValue(window, "AXDocument" as CFString, &docRef)
+            if let url = docRef as? String, url.hasPrefix("http") { return url }
+
+        case .chrome, .arc, .brave, .edge:
+            // Chrome-family: address bar is an AXTextField in the toolbar (depth ≤ 6)
+            if let url = findURLTextField(in: window, depth: 0, maxDepth: 6) { return url }
+
+        case .firefox:
+            // Firefox address bar accessible via AXTextField search
+            if let url = findURLTextField(in: window, depth: 0, maxDepth: 6) { return url }
+        }
+        return nil
+    }
+
+    // Walk the AX tree looking for a text field whose value looks like a URL or domain
+    private static func findURLTextField(in element: AXUIElement, depth: Int, maxDepth: Int) -> String? {
+        guard depth <= maxDepth else { return nil }
+
+        var roleRef: AnyObject?
+        AXUIElementCopyAttributeValue(element, kAXRoleAttribute as CFString, &roleRef)
+
+        if (roleRef as? String) == kAXTextFieldRole as String {
+            var valRef: AnyObject?
+            AXUIElementCopyAttributeValue(element, kAXValueAttribute as CFString, &valRef)
+            if let str = valRef as? String, looksLikeURL(str) { return str }
+        }
+
+        var childrenRef: AnyObject?
+        AXUIElementCopyAttributeValue(element, kAXChildrenAttribute as CFString, &childrenRef)
+        guard let children = childrenRef as? [AXUIElement] else { return nil }
+
+        for child in children {
+            if let found = findURLTextField(in: child, depth: depth + 1, maxDepth: maxDepth) {
+                return found
+            }
+        }
+        return nil
+    }
+
+    static func looksLikeURL(_ s: String) -> Bool {
+        if s.hasPrefix("http://") || s.hasPrefix("https://") { return true }
+        return looksLikeDomain(s)
+    }
+
     static func looksLikeDomain(_ s: String) -> Bool {
-        let pattern = #"^[a-z0-9]([a-z0-9\-]{0,61}[a-z0-9])?(\.[a-z]{2,}){1,3}$"#
+        let pattern = #"^[a-z0-9]([a-z0-9\-]{0,61}[a-z0-9])?(\.[a-z]{2,}){1,3}(/.*)?$"#
         return s.range(of: pattern, options: [.regularExpression, .caseInsensitive]) != nil
     }
 
     static func host(from urlString: String) -> String? {
         guard let url = URL(string: urlString), let host = url.host else { return nil }
-        // Strip www. prefix for consistent matching
         return host.hasPrefix("www.") ? String(host.dropFirst(4)) : host
     }
 }
