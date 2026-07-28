@@ -6,9 +6,8 @@ struct FocusPetApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     var body: some Scene {
-        Settings {
-            SettingsView()
-        }
+        // Settings window opened manually via MenuBarController with shared UsageTracker
+        Settings { EmptyView() }
     }
 }
 

@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct SettingsView: View {
-    @StateObject private var usageTracker = UsageTracker()
+    @ObservedObject var usageTracker: UsageTracker
     @State private var newHost = ""
     @State private var apiKey = Keychain.load(forKey: "anthropicAPIKey") ?? ""
     @State private var showAPIKeyMismatch = false

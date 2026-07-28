@@ -60,7 +60,7 @@ final class MenuBarController: NSObject {
             defer: false
         )
         win.title = "FocusPet Settings"
-        win.contentViewController = NSHostingController(rootView: SettingsView())
+        win.contentViewController = NSHostingController(rootView: SettingsView(usageTracker: usageTracker))
         win.center()
         win.isReleasedWhenClosed = false
         win.makeKeyAndOrderFront(nil)
