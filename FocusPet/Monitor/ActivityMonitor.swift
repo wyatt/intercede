@@ -23,7 +23,6 @@ final class ActivityMonitor {
     }
 
     private func tick() {
-        guard AccessibilityPermission.isGranted else { return }
         guard let host = frontmostBrowserHost() else { return }
         usageTracker.record(host: host, at: Date())
     }
