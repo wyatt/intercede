@@ -23,7 +23,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let usageTracker = UsageTracker()
         let activityMonitor = ActivityMonitor(usageTracker: usageTracker)
         let nudgeCoordinator = NudgeCoordinator(usageTracker: usageTracker)
-        let menuBarController = MenuBarController(usageTracker: usageTracker, activityMonitor: activityMonitor)
+        let menuBarController = MenuBarController(usageTracker: usageTracker, activityMonitor: activityMonitor, nudgeCoordinator: nudgeCoordinator)
 
         self.usageTracker = usageTracker
         self.nudgeCoordinator = nudgeCoordinator

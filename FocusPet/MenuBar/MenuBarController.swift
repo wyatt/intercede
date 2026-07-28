@@ -7,11 +7,13 @@ final class MenuBarController: NSObject {
     private var popover: NSPopover!
     private let usageTracker: UsageTracker
     private let activityMonitor: ActivityMonitor
+    private let nudgeCoordinator: NudgeCoordinator
     private var settingsWindow: NSWindow?
 
-    init(usageTracker: UsageTracker, activityMonitor: ActivityMonitor) {
+    init(usageTracker: UsageTracker, activityMonitor: ActivityMonitor, nudgeCoordinator: NudgeCoordinator) {
         self.usageTracker = usageTracker
         self.activityMonitor = activityMonitor
+        self.nudgeCoordinator = nudgeCoordinator
         super.init()
         setupStatusItem()
         setupPopover()
@@ -35,7 +37,8 @@ final class MenuBarController: NSObject {
             rootView: MenuBarPopoverView(
                 usageTracker: usageTracker,
                 activityMonitor: activityMonitor,
-                openSettings: { [weak self] in self?.openSettings() }
+                openSettings: { [weak self] in self?.openSettings() },
+                testNudge: { [weak self] in self?.nudgeCoordinator.triggerTest() }
             )
         )
     }
@@ -90,6 +93,7 @@ struct MenuBarPopoverView: View {
     @ObservedObject var usageTracker: UsageTracker
     @ObservedObject var activityMonitor: ActivityMonitor
     let openSettings: () -> Void
+    let testNudge: () -> Void
     @State private var axGranted = AccessibilityPermission.isGranted
 
     var body: some View {
@@ -151,6 +155,10 @@ struct MenuBarPopoverView: View {
             Divider()
 
             HStack {
+                Button("Test Nudge") { testNudge() }
+                    .font(.system(size: 10, design: .monospaced))
+                    .buttonStyle(.plain)
+                    .foregroundColor(.secondary)
                 Button("Copy AX Tree") {
                     let dump = activityMonitor.lastAXDump
                     guard !dump.isEmpty else { return }

@@ -29,6 +29,10 @@ final class NudgeCoordinator {
             .store(in: &cancellables)
     }
 
+    func triggerTest() {
+        handleBreach(host: "test.nudge")
+    }
+
     private func handleBreach(host: String) {
         guard activeOverlay == nil || !activeOverlay!.isVisible else { return }
 
