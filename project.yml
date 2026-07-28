@@ -1,0 +1,43 @@
+name: FocusPet
+options:
+  bundleIdPrefix: com.focuspet
+  deploymentTarget:
+    macOS: "14.0"
+  xcodeVersion: "16"
+  createIntermediateGroups: true
+  groupSortPosition: top
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MACOSX_DEPLOYMENT_TARGET: "14.0"
+    ENABLE_HARDENED_RUNTIME: YES
+
+targets:
+  FocusPet:
+    type: application
+    platform: macOS
+    sources:
+      - FocusPet
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.focuspet.app
+        INFOPLIST_FILE: FocusPet/Resources/Info.plist
+        CODE_SIGN_ENTITLEMENTS: FocusPet/Resources/FocusPet.entitlements
+        CODE_SIGN_STYLE: Automatic
+        PRODUCT_NAME: FocusPet
+    entitlements:
+      path: FocusPet/Resources/FocusPet.entitlements
+
+  FocusPetTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - FocusPetTests
+    dependencies:
+      - target: FocusPet
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.focuspet.tests
+        BUNDLE_LOADER: "$(TEST_HOST)"
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/FocusPet.app/Contents/MacOS/FocusPet"
