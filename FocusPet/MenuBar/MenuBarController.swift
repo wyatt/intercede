@@ -1,10 +1,12 @@
 import AppKit
 import SwiftUI
 
+@MainActor
 final class MenuBarController: NSObject {
     private var statusItem: NSStatusItem!
     private var popover: NSPopover!
     private let usageTracker: UsageTracker
+    private var settingsWindow: NSWindow?
 
     init(usageTracker: UsageTracker) {
         self.usageTracker = usageTracker
@@ -28,7 +30,9 @@ final class MenuBarController: NSObject {
         popover.contentSize = NSSize(width: 280, height: 320)
         popover.behavior = .transient
         popover.contentViewController = NSHostingController(
-            rootView: MenuBarPopoverView(usageTracker: usageTracker)
+            rootView: MenuBarPopoverView(usageTracker: usageTracker, openSettings: { [weak self] in
+                self?.openSettings()
+            })
         )
     }
 
@@ -40,22 +44,40 @@ final class MenuBarController: NSObject {
         }
     }
 
-    // Programmatically drawn pixel-art pet icon (16x16)
+    private func openSettings() {
+        popover.performClose(nil)
+
+        if let win = settingsWindow, win.isVisible {
+            win.makeKeyAndOrderFront(nil)
+            NSApp.activate(ignoringOtherApps: true)
+            return
+        }
+
+        let win = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 420, height: 380),
+            styleMask: [.titled, .closable],
+            backing: .buffered,
+            defer: false
+        )
+        win.title = "FocusPet Settings"
+        win.contentViewController = NSHostingController(rootView: SettingsView())
+        win.center()
+        win.isReleasedWhenClosed = false
+        win.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+        settingsWindow = win
+    }
+
     private func pixelPetIcon() -> NSImage {
         let size = NSSize(width: 18, height: 18)
         let img = NSImage(size: size)
         img.lockFocus()
-
-        // Body
         NSColor.systemGreen.setFill()
         NSRect(x: 3, y: 3, width: 12, height: 12).fill()
-        // Eyes
         NSColor.black.setFill()
         NSRect(x: 5, y: 9, width: 3, height: 3).fill()
         NSRect(x: 10, y: 9, width: 3, height: 3).fill()
-        // Smile
         NSRect(x: 6, y: 5, width: 6, height: 2).fill()
-
         img.unlockFocus()
         return img
     }
@@ -63,16 +85,15 @@ final class MenuBarController: NSObject {
 
 struct MenuBarPopoverView: View {
     @ObservedObject var usageTracker: UsageTracker
-    @State private var showSettings = false
+    let openSettings: () -> Void
 
     var body: some View {
         VStack(spacing: 0) {
-            // Header
             HStack {
                 Text("FOCUS PET")
                     .font(.system(size: 14, weight: .bold, design: .monospaced))
                 Spacer()
-                Button(action: { showSettings = true }) {
+                Button(action: openSettings) {
                     Image(systemName: "gearshape.fill")
                 }
                 .buttonStyle(.plain)
@@ -89,7 +110,6 @@ struct MenuBarPopoverView: View {
 
             Divider()
 
-            // Footer: quit
             HStack {
                 Spacer()
                 Button("Quit") { NSApp.terminate(nil) }
@@ -99,9 +119,6 @@ struct MenuBarPopoverView: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
-        }
-        .sheet(isPresented: $showSettings) {
-            SettingsView()
         }
     }
 }
