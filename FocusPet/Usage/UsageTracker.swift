@@ -40,19 +40,17 @@ final class UsageTracker: ObservableObject {
         }
     }
 
-    func record(host: String, at date: Date) {
+    func record(host: String, elapsed: TimeInterval) {
         let today = todayDateKey()
         if todayUsage.date != today {
-            // Day rolled over
             store.save(todayUsage)
-            todayUsage = store.load(for: date)
+            todayUsage = store.load(for: Date())
         }
 
-        // Only count if host is tracked
         guard siteConfigs.contains(where: { matches(host: host, config: $0) }) else { return }
 
         let normalizedHost = normalize(host: host)
-        todayUsage.seconds[normalizedHost, default: 0] += 2  // 2s per poll tick
+        todayUsage.seconds[normalizedHost, default: 0] += elapsed
         store.save(todayUsage)
 
         checkBudget(host: normalizedHost)

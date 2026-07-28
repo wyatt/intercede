@@ -10,6 +10,8 @@ final class ActivityMonitor: ObservableObject {
     @Published var lastAXDump: String = ""
     private(set) var lastBrowserPID: pid_t?
     private(set) var lastBrowser: Browser?
+    private var lastTickDate: Date?
+    private let maxTickGap: TimeInterval = 10  // cap single tick contribution
 
     init(usageTracker: UsageTracker) {
         self.usageTracker = usageTracker
@@ -38,6 +40,7 @@ final class ActivityMonitor: ObservableObject {
         }
         guard let browser = Browser(rawValue: bundleID) else {
             debugStatus = "not a browser: \(bundleID)"
+            lastTickDate = nil
             return
         }
         lastBrowserPID = frontApp.processIdentifier
@@ -50,7 +53,10 @@ final class ActivityMonitor: ObservableObject {
             debugStatus = "extract failed — raw: \(BrowserURLParser.rawAddressBarValue(appPID: frontApp.processIdentifier) ?? "nil")"
             return
         }
+        let now = Date()
+        let elapsed = lastTickDate.map { min(now.timeIntervalSince($0), maxTickGap) } ?? 2.0
+        lastTickDate = now
         debugStatus = "tracking: \(host)"
-        usageTracker.record(host: host, at: Date())
+        usageTracker.record(host: host, elapsed: elapsed)
     }
 }
