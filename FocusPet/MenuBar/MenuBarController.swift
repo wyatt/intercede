@@ -152,11 +152,10 @@ struct MenuBarPopoverView: View {
 
             HStack {
                 Button("Copy AX Tree") {
-                    if let pid = activityMonitor.lastBrowserPID {
-                        let dump = BrowserURLParser.dumpAXTree(appPID: pid)
-                        NSPasteboard.general.clearContents()
-                        NSPasteboard.general.setString(dump, forType: .string)
-                    }
+                    let dump = activityMonitor.lastAXDump
+                    guard !dump.isEmpty else { return }
+                    NSPasteboard.general.clearContents()
+                    NSPasteboard.general.setString(dump, forType: .string)
                 }
                 .font(.system(size: 10, design: .monospaced))
                 .buttonStyle(.plain)
