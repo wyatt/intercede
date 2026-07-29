@@ -5,12 +5,12 @@ struct NudgeOverlayView: View {
     let petImage: NSImage?
     let onDismiss: () -> Void
 
-    @State private var offsetX: CGFloat = -200
+    @State private var offsetX: CGFloat = -250
     @State private var showBubble = false
+    @State private var spriteRow: SpriteRow = .runRight
 
     var body: some View {
         ZStack(alignment: .bottomLeading) {
-            // Speech bubble
             if showBubble {
                 VStack(alignment: .leading, spacing: 0) {
                     SpeechBubble(text: message)
@@ -20,16 +20,19 @@ struct NudgeOverlayView: View {
                 .offset(x: offsetX + 20, y: -80)
             }
 
-            // Sprite
-            SpriteView(image: petImage, frameSize: 64)
+            SpriteView(image: petImage, displaySize: 96, row: spriteRow)
                 .offset(x: offsetX, y: 0)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
         .onAppear {
+            // Walk in from left
+            spriteRow = .runRight
             withAnimation(.easeOut(duration: 0.6)) {
                 offsetX = 16
             }
+            // Switch to idle and show bubble
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) {
+                spriteRow = .idle
                 withAnimation(.spring(response: 0.3)) {
                     showBubble = true
                 }
@@ -41,11 +44,17 @@ struct NudgeOverlayView: View {
     }
 
     private func dismiss() {
-        withAnimation(.easeIn(duration: 0.4)) {
+        withAnimation(.easeIn(duration: 0.3)) {
             showBubble = false
-            offsetX = -200
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+        // Walk out to left
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+            spriteRow = .runLeft
+            withAnimation(.easeIn(duration: 0.5)) {
+                offsetX = -250
+            }
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
             onDismiss()
         }
     }
@@ -71,7 +80,6 @@ struct SpeechBubble: View {
                 )
                 .shadow(color: .black.opacity(0.2), radius: 4, x: 2, y: 2)
 
-            // Triangle pointer pointing down-left
             Triangle()
                 .fill(Color.white)
                 .frame(width: 12, height: 8)

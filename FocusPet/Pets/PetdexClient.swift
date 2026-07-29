@@ -4,8 +4,15 @@ import AppKit
 struct PetEntry: Codable, Identifiable, Hashable {
     var id: String { slug }
     var slug: String
-    var name: String
-    var spriteURL: String
+    var displayName: String
+    var spritesheetUrl: String
+    var petJsonUrl: String?
+
+    // Sprite sheet constants (Petdex standard: 8 cols × 9 rows, 192×208 px per frame)
+    static let cols = 8
+    static let rows = 9
+    static let frameWidth: CGFloat = 192
+    static let frameHeight: CGFloat = 208
 }
 
 @MainActor
@@ -14,7 +21,8 @@ final class PetdexClient: ObservableObject {
     @Published var isLoading = false
 
     private let cacheDir: URL
-    private let catalogURL = URL(string: "https://petdex.dev/api/pets")!
+    // Real manifest — redirects to assets.petdex.dev/manifests/petdex-v1.json
+    private let manifestURL = URL(string: "https://assets.petdex.dev/manifests/petdex-v1.json")!
 
     init() {
         let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
@@ -25,7 +33,7 @@ final class PetdexClient: ObservableObject {
 
     func fetchCatalog() {
         isLoading = true
-        let url = catalogURL
+        let url = manifestURL
         let dir = cacheDir
         Task {
             do {
@@ -41,15 +49,19 @@ final class PetdexClient: ObservableObject {
     }
 
     func spriteImage(for pet: PetEntry) -> NSImage? {
-        let cached = cacheDir.appendingPathComponent("\(pet.slug).png")
+        let cached = cacheDir.appendingPathComponent("\(pet.slug).webp")
         if let img = NSImage(contentsOf: cached) { return img }
+        // Also try .png for legacy cached files
+        let cachedPNG = cacheDir.appendingPathComponent("\(pet.slug).png")
+        if let img = NSImage(contentsOf: cachedPNG) { return img }
         downloadSprite(for: pet)
         return nil
     }
 
     private func downloadSprite(for pet: PetEntry) {
-        guard let url = URL(string: pet.spriteURL) else { return }
-        let dest = cacheDir.appendingPathComponent("\(pet.slug).png")
+        guard let url = URL(string: pet.spritesheetUrl) else { return }
+        let ext = url.pathExtension.isEmpty ? "webp" : url.pathExtension
+        let dest = cacheDir.appendingPathComponent("\(pet.slug).\(ext)")
         Task {
             guard let (data, _) = try? await URLSession.shared.data(from: url) else { return }
             try? data.write(to: dest, options: .atomic)
@@ -65,20 +77,11 @@ final class PetdexClient: ObservableObject {
     }
 
     private static func parsePets(from data: Data) -> [PetEntry]? {
+        // Manifest wraps entries under "pets" key
+        struct Manifest: Codable { var pets: [PetEntry] }
+        if let manifest = try? JSONDecoder().decode(Manifest.self, from: data) { return manifest.pets }
+        // Direct array fallback
         if let pets = try? JSONDecoder().decode([PetEntry].self, from: data) { return pets }
-        if let wrapped = try? JSONDecoder().decode([String: [PetEntry]].self, from: data),
-           let pets = wrapped["pets"] ?? wrapped["data"] ?? wrapped["results"] { return pets }
-        if let raw = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] {
-            return raw.compactMap { dict -> PetEntry? in
-                guard let slug = dict["slug"] as? String ?? dict["id"] as? String,
-                      let name = dict["name"] as? String,
-                      let spriteURL = dict["spriteUrl"] as? String
-                                   ?? dict["sprite_url"] as? String
-                                   ?? dict["image"] as? String
-                                   ?? dict["url"] as? String else { return nil }
-                return PetEntry(slug: slug, name: name, spriteURL: spriteURL)
-            }
-        }
         return nil
     }
 }

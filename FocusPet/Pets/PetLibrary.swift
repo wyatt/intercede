@@ -12,11 +12,12 @@ final class PetLibrary: ObservableObject {
 
     init(petdexClient: PetdexClient) {
         self.petdexClient = petdexClient
-        self.selectedPetSlug = UserDefaults.standard.string(forKey: "selectedPetSlug") ?? "default"
+        self.selectedPetSlug = UserDefaults.standard.string(forKey: "selectedPetSlug") ?? "theveller"
     }
 
     var currentPet: PetEntry? {
         petdexClient.pets.first { $0.slug == selectedPetSlug }
+            ?? petdexClient.pets.first
     }
 
     var currentSpriteImage: NSImage? {
