@@ -248,6 +248,19 @@ final class NudgeSceneTests: XCTestCase {
         XCTAssertEqual(scene.hitRects[0].minY, scene.bottomInset)
     }
 
+    func testSweepsThePageWithoutBeingTapped() async throws {
+        let scene = NudgeScene(message: "hi", sheet: SpriteSheet.bishop)
+        var phases: [PetAnimation] = []
+        scene.onPhase = { phases.append($0) }
+        var finished = false
+        scene.enter { finished = true }
+        // walk 1.6 + idle 0.6 + alert ~0.7 + speak 3 + dismiss ~0.8 + settle ~0.6 ≈ 7.3s
+        try await Task.sleep(for: .seconds(7.8))
+        XCTAssertEqual(phases, [.walkIn, .idle, .alert, .talk, .dismiss, .settle, .idle])
+        XCTAssertFalse(finished, "he waits for a tap (or auto-dismiss) after sweeping")
+        scene.abort(reason: "test over")
+    }
+
     func testNothingClickableOnceExiting() {
         let scene = NudgeScene(message: "hi", sheet: SpriteSheet.bishop)
         scene.exit()

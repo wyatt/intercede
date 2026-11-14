@@ -11,7 +11,7 @@ The native app already knows *when* (budget breach → nudge) and *what site*. I
 | # | Question | Decision |
 |---|----------|----------------|
 | D1 | **What's left after the dissolve?** (a) a calm "veil" over the page with a *Return anyway* button, (b) navigate the tab to a blank/new-tab page, (c) close the tab ("Insane mode") | **(a) by default**, (c) as an opt-in strict mode later. The veil can be undone and doesn't lose form input or scroll position, and a tab never vanishes without warning. |
-| D2 | **When does the page react?** | Two beats, synced to the sprite: **on appearance** (raise-hand) the page *holds*: media pauses, the page dims slightly. **On the dismiss sweep** (golden pixels) it *dissolves*. If the user ignores him until auto-dismiss, the sweep still happens. |
+| D2 | **When does the page react?** | Two beats, synced to the sprite: **on appearance** (raise-hand) the page *holds*: media pauses, the page dims slightly. **On the dismiss sweep** (golden pixels) it *dissolves*. The sweep is automatic, about 3 s after he starts speaking, so the page is dealt with before the user clicks him. A tap before then still sweeps first. *(Revised: originally the sweep waited for the tap.)* |
 | D3 | **Which browsers first?** | **Chromium (Chrome, Arc, Brave, Edge)** — one MV3 codebase. Firefox next (same code, small manifest differences). Safari last: it needs an Xcode-built Safari Web Extension target, and Xcode isn't installed on this machine yet. |
 | D4 | **Site permissions** | `<all_urls>` host permission (needed to inject on demand and to screenshot the tab). It's simple and right for a personal, unpacked install. Revisit with optional per-site permissions if it's ever published to the Chrome Web Store. |
 

@@ -1,7 +1,8 @@
 import SwiftUI
 
-/// Drives the nudge choreography: walk in → idle → raise hand → speak … dismiss → lower hand → walk out.
-/// All steps run in one cancellable task, so dismissing mid-entrance cleanly switches to the exit.
+/// Drives the nudge choreography: walk in → idle → raise hand → speak → sweep the page away → lower
+/// hand → (wait for a tap) → walk out. The sweep happens on its own, so the page is dealt with before
+/// the user clicks him. All steps run in one cancellable task, so a tap at any point exits cleanly.
 @MainActor
 final class NudgeScene: ObservableObject {
     @Published private(set) var animation: PetAnimation = .walkIn
@@ -18,10 +19,12 @@ final class NudgeScene: ObservableObject {
     let bottomInset: CGFloat = 8
     let bubbleGap: CGFloat = 4
     private let walkDuration: TimeInterval = 1.6
+    private let speakBeforeSweep: TimeInterval = 3
     private let autoDismissAfter: TimeInterval = 45
 
     private var script: Task<Void, Never>?
     private var isExiting = false
+    private var hasSwept = false
     private var onFinished: (() -> Void)?
     /// Called as each beat starts, so the browser page can react in sync (hold on alert, dissolve on dismiss).
     var onPhase: ((PetAnimation) -> Void)?
@@ -50,23 +53,39 @@ final class NudgeScene: ObservableObject {
             guard await pause(clipDuration(.alert)) else { return }
             play(.talk)
             withAnimation(.spring(response: 0.3)) { showBubble = true }
+            guard await pause(speakBeforeSweep) else { return }
+            guard await sweep() else { return }
+            play(.idle)  // hand lowered, bubble still up, until tapped
             guard await pause(autoDismissAfter) else { return }
             exit(reason: "auto-dismiss")
         }
+    }
+
+    /// The dismiss gesture (the browser page dissolves on it) followed by lowering his hand.
+    /// Returns false if cancelled partway.
+    private func sweep() async -> Bool {
+        hasSwept = true
+        play(.dismiss)
+        guard await pause(clipDuration(.dismiss) + 0.15) else { return false }
+        play(.settle)
+        return await pause(clipDuration(.settle))
     }
 
     func exit(reason: String = "tap") {
         guard !isExiting else { return }
         Log.overlay.info("exit requested: \(reason, privacy: .public) (during \(String(describing: self.animation), privacy: .public))")
         isExiting = true
-        let handRaised = animation == .alert || animation == .talk
+        // Mid-sweep or still to sweep with his hand up: finish the gesture first, so the page always
+        // gets dissolved and he never walks off with his hand raised.
+        let sweepPending = !hasSwept && (animation == .alert || animation == .talk)
+        let settlePending = animation == .dismiss
         script?.cancel()
         script = Task { [weak self] in
             guard let self else { return }
             withAnimation(.easeIn(duration: 0.2)) { showBubble = false }
-            if handRaised {
-                play(.dismiss)
-                await pause(clipDuration(.dismiss) + 0.15)
+            if sweepPending {
+                _ = await sweep()
+            } else if settlePending {
                 play(.settle)
                 await pause(clipDuration(.settle))
             }
