@@ -20,7 +20,7 @@ When you spend too long on a tracked site (YouTube, Reddit, etc.), St. Alphonsus
 
 - **Activity tracking** — real elapsed-time accumulation, AppleScript URL extraction (Chrome, Safari, Arc, Brave, Edge), AX API fallback
 - **Daily budgets** — per-site time budgets, breach detection with 5-minute cooldown between nudges
-- **Sprite overlay** — small non-activating window in the bottom-left of the screen under the cursor; walk in → raise hand → speak → sweep the page away (automatically, ~3s in) → lower hand → walk out when tapped; tap sprite or bubble to dismiss, auto-dismisses 45s after the sweep
+- **Sprite overlay** — small non-activating window in the bottom-left of the screen under the cursor; walk in → raise hand → speak → sweep the page away (automatically, ~1.5s in) → lower hand → walk out when tapped; tap sprite or bubble to dismiss, auto-dismisses 45s after the sweep
 - **Bundled pet: St. Alphonsus Liguori** — 7-animation sprite sheet shipped in the app, so nudges never depend on the network; his catchphrase "This is not Liguorian!" heads every bubble
 - **Menu bar** — pixel-art icon, popover with live budget bars per site, debug status indicator
 - **Settings** — site list CRUD (accepts bare hosts or pasted URLs), per-site daily budget (stepper, minutes, saved immediately), pet picker with preview

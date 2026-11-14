@@ -228,6 +228,15 @@ final class PetTests: XCTestCase {
         }
     }
 
+    func testPhraseWithoutHostNeverNamesASite() {
+        for pet in Pet.roster {
+            XCTAssertTrue(pet.phrases.contains { !$0.contains("%@") }, "\(pet.name) needs a site-free phrase")
+            for _ in 0..<40 {
+                XCTAssertFalse(pet.randomPhrase(host: nil).contains("%@"), pet.name)
+            }
+        }
+    }
+
     func testPhrasesInterpolateHost() {
         for pet in Pet.roster {
             for _ in 0..<40 {
@@ -254,8 +263,8 @@ final class NudgeSceneTests: XCTestCase {
         scene.onPhase = { phases.append($0) }
         var finished = false
         scene.enter { finished = true }
-        // walk 1.6 + idle 0.6 + alert ~0.7 + speak 3 + dismiss ~0.8 + settle ~0.6 ≈ 7.3s
-        try await Task.sleep(for: .seconds(7.8))
+        // walk 1.6 + idle 0.6 + alert ~0.7 + speak 1.5 + dismiss ~0.8 + settle ~0.6 ≈ 5.8s
+        try await Task.sleep(for: .seconds(6.3))
         XCTAssertEqual(phases, [.walkIn, .idle, .alert, .talk, .dismiss, .settle, .idle])
         XCTAssertFalse(finished, "he waits for a tap (or auto-dismiss) after sweeping")
         scene.abort(reason: "test over")

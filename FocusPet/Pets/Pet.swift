@@ -15,9 +15,12 @@ struct Pet: Identifiable {
 
     var id: String { slug }
 
-    func randomPhrase(host: String) -> String {
-        let phrase = phrases.randomElement() ?? ""
-        return phrase.replacingOccurrences(of: "%@", with: host)
+    /// A random phrase for `host`. Without a host (e.g. Test Nudge), only phrases that don't name a site.
+    func randomPhrase(host: String?) -> String {
+        guard let host else {
+            return phrases.filter { !$0.contains("%@") }.randomElement() ?? catchphrase
+        }
+        return (phrases.randomElement() ?? catchphrase).replacingOccurrences(of: "%@", with: host)
     }
 }
 

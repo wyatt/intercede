@@ -19,7 +19,7 @@ final class NudgeScene: ObservableObject {
     let bottomInset: CGFloat = 8
     let bubbleGap: CGFloat = 4
     private let walkDuration: TimeInterval = 1.6
-    private let speakBeforeSweep: TimeInterval = 3
+    private let speakBeforeSweep: TimeInterval = 1.5
     private let autoDismissAfter: TimeInterval = 45
 
     private var script: Task<Void, Never>?

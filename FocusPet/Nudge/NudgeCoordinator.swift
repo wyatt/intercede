@@ -27,12 +27,13 @@ final class NudgeCoordinator {
     /// Always shows a fresh nudge, replacing any that's already up.
     func triggerTest() {
         activeOverlay?.abort(reason: "replaced by Test Nudge")
-        handleBreach(host: "test.nudge", isTest: true)
+        handleBreach(host: nil)
     }
 
-    private func handleBreach(host: String, isTest: Bool = false) {
+    /// `host` is the site over budget, or nil for a test nudge (which may target any page).
+    private func handleBreach(host: String?) {
         guard !isPresenting else {
-            Log.overlay.info("breach for \(host, privacy: .public) ignored: nudge already presenting")
+            Log.overlay.info("breach for \(host ?? "test", privacy: .public) ignored: nudge already presenting")
             return
         }
         guard let screen = Self.screenUnderMouse() else { return }
@@ -49,7 +50,8 @@ final class NudgeCoordinator {
 
         // Keep the browser page in step with the pet: it holds when his hand rises and dissolves
         // on his sweep. If the nudge ends without a sweep, the hold is released.
-        let nudge: [String: Any] = ["nudgeId": UUID().uuidString, "host": host, "test": isTest]
+        var nudge: [String: Any] = ["nudgeId": UUID().uuidString, "test": host == nil]
+        if let host { nudge["host"] = host }
         var dissolved = false
         window.onPhase = { [weak self, weak window] phase in
             guard let self else { return }

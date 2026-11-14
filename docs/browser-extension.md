@@ -11,7 +11,7 @@ The native app already knows *when* (budget breach → nudge) and *what site*. I
 | # | Question | Decision |
 |---|----------|----------------|
 | D1 | **What's left after the dissolve?** (a) a calm "veil" over the page with a *Return anyway* button, (b) navigate the tab to a blank/new-tab page, (c) close the tab ("Insane mode") | **(a) by default**, (c) as an opt-in strict mode later. The veil can be undone and doesn't lose form input or scroll position, and a tab never vanishes without warning. |
-| D2 | **When does the page react?** | Two beats, synced to the sprite: **on appearance** (raise-hand) the page *holds*: media pauses, the page dims slightly. **On the dismiss sweep** (golden pixels) it *dissolves*. The sweep is automatic, about 3 s after he starts speaking, so the page is dealt with before the user clicks him. A tap before then still sweeps first. *(Revised: originally the sweep waited for the tap.)* |
+| D2 | **When does the page react?** | Two beats, synced to the sprite: **on appearance** (raise-hand) the page *holds*: media pauses, the page dims slightly. **On the dismiss sweep** (golden pixels) it *dissolves*. The sweep is automatic, about 1.5 s after he starts speaking, so the page is dealt with before the user clicks him. A tap before then still sweeps first. *(Revised: originally the sweep waited for the tap.)* |
 | D3 | **Which browsers first?** | **Chromium (Chrome, Arc, Brave, Edge)** — one MV3 codebase. Firefox next (same code, small manifest differences). Safari last: it needs an Xcode-built Safari Web Extension target, and Xcode isn't installed on this machine yet. |
 | D4 | **Site permissions** | `<all_urls>` host permission (needed to inject on demand and to screenshot the tab). It's simple and right for a personal, unpacked install. Revisit with optional per-site permissions if it's ever published to the Chrome Web Store. |
 
@@ -174,7 +174,7 @@ Checked in headless Chrome: media pauses on hold; scatter, cover, and reduced-mo
 
 ## Phase 2 notes (as built)
 
-- **Routing:** the app broadcasts every message to all connected helpers. Each extension acts only if one of its windows is focused and the active tab matches the host (for Test Nudge, which sends `test: true`: any http(s) tab in the last-focused window). This replaces the "route to the frontmost browser" idea.
+- **Routing:** the app broadcasts every message to all connected helpers. Each extension acts only if one of its windows is focused and the active tab matches the host (for Test Nudge, which sends `test: true` and no `host`: any http(s) tab in the last-focused window). This replaces the "route to the frontmost browser" idea.
 - **Helper:** if the app isn't running, it keeps retrying the socket every 2 s and replays the extension's `hello` on connect. It also sends the extension `connected` / `appUnavailable`.
 - **Debug overrides:** `FOCUSPET_BRIDGE_SOCKET` overrides the socket path for both the app and the helper.
 - **Checked:** Swift tests cover line framing, the host installer, and a socket round-trip. End-to-end, a headless Chrome with the unpacked extension and the real helper against a stand-in app socket handled `hello`, `hold` (ack ok), and `dissolve` (ack ok, scatter mode).
