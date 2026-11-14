@@ -275,3 +275,64 @@ final class PetLibraryTests: XCTestCase {
         defaults.removePersistentDomain(forName: suite)
     }
 }
+
+@MainActor
+final class BrowserBridgeTests: XCTestCase {
+    func testTakeLinesSplitsAndKeepsPartialRemainder() {
+        var buffer = Data("{\"a\":1}\n\n{\"b\":2}\n{\"c\":".utf8)
+        let lines = BrowserBridge.takeLines(from: &buffer)
+        XCTAssertEqual(lines.map { String(decoding: $0, as: UTF8.self) }, ["{\"a\":1}", "{\"b\":2}"])
+        XCTAssertEqual(String(decoding: buffer, as: UTF8.self), "{\"c\":")
+    }
+
+    func testInstallerRegistersOnlyInstalledBrowsersAndIsIdempotent() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("fp-hosts-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: root) }
+        let support = root.appendingPathComponent("Application Support")
+        try FileManager.default.createDirectory(at: support.appendingPathComponent("Google/Chrome"), withIntermediateDirectories: true)
+        let helper = root.appendingPathComponent("FocusPetBridge")
+        FileManager.default.createFile(atPath: helper.path, contents: Data("#!/bin/sh\n".utf8), attributes: [.posixPermissions: 0o755])
+
+        let first = NativeHostInstaller.install(helperURL: helper, appSupport: support)
+        XCTAssertEqual(first.written, ["Google/Chrome"])
+        let file = support.appendingPathComponent("Google/Chrome/NativeMessagingHosts/com.focuspet.bridge.json")
+        let json = try XCTUnwrap(try JSONSerialization.jsonObject(with: Data(contentsOf: file)) as? [String: Any])
+        XCTAssertEqual(json["path"] as? String, helper.path)
+        XCTAssertEqual(json["allowed_origins"] as? [String], ["chrome-extension://bminoilbndphincaaooginfkcjamaadc/"])
+
+        let second = NativeHostInstaller.install(helperURL: helper, appSupport: support)
+        XCTAssertEqual(second, NativeHostInstaller.Result(written: [], unchanged: ["Google/Chrome"]))
+    }
+
+    func testSocketRoundTrip() async throws {
+        let path = FileManager.default.temporaryDirectory.appendingPathComponent("fpb-\(UUID().uuidString.prefix(8)).sock").path
+        let bridge = BrowserBridge(socketPath: path)
+        bridge.start()
+        defer { bridge.stop() }
+
+        let fd = socket(AF_UNIX, SOCK_STREAM, 0)
+        defer { close(fd) }
+        var addr = sockaddr_un()
+        addr.sun_family = sa_family_t(AF_UNIX)
+        withUnsafeMutableBytes(of: &addr.sun_path) { raw in
+            let bytes = Array(path.utf8); raw.copyBytes(from: bytes); raw[bytes.count] = 0
+        }
+        let connected = withUnsafePointer(to: &addr) {
+            $0.withMemoryRebound(to: sockaddr.self, capacity: 1) { connect(fd, $0, socklen_t(MemoryLayout<sockaddr_un>.size)) == 0 }
+        }
+        XCTAssertTrue(connected)
+
+        let hello = Data(#"{"v":1,"type":"hello","browser":"Google Chrome"}"#.utf8 + [0x0A])
+        _ = hello.withUnsafeBytes { write(fd, $0.baseAddress, $0.count) }
+        try await Task.sleep(for: .milliseconds(200))
+        XCTAssertEqual(bridge.connectedBrowsers, ["Google Chrome"])
+
+        bridge.send(["type": "hold", "nudgeId": "n1", "host": "youtube.com"])
+        var chunk = [UInt8](repeating: 0, count: 4096)
+        let n = read(fd, &chunk, chunk.count)
+        let reply = try XCTUnwrap(try JSONSerialization.jsonObject(with: Data(chunk[0..<max(n, 0)].dropLast())) as? [String: Any])
+        XCTAssertEqual(reply["type"] as? String, "hold")
+        XCTAssertEqual(reply["v"] as? Int, 1)
+        XCTAssertEqual(reply["host"] as? String, "youtube.com")
+    }
+}

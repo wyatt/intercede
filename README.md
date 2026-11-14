@@ -52,6 +52,8 @@ Currently only **easy mode** (single tap dismisses). Planned:
 
 ### Browser Extension (for Insane Mode)
 See [docs/browser-extension.md](docs/browser-extension.md) for the blueprint (page hold + pixel dissolve synced to the pet's gesture). The effect itself is built: open `Extension/dev/harness.html` in Chrome to try it (keys: N simulate nudge, H hold, D dissolve, R reset).
+
+**Installing the extension (Chrome):** run the app once (`make app` or `make run`) so it registers its native-messaging host, then open `chrome://extensions`, turn on **Developer mode**, click **Load unpacked**, and choose the `Extension/` folder. The ID should be `bminoilbndphincaaooginfkcjamaadc`. When a nudge fires on a tracked site, the page holds as the pet raises his hand and dissolves on his sweep; **Test Nudge** targets whatever web page is active in Chrome.
 - Chrome/Safari extension that receives close-tab commands from the native app
 - Communicates via native messaging or local loopback
 - Required for reliable URL detection on browsers that don't expose URLs via AppleScript

@@ -26,11 +26,30 @@ targets:
         CODE_SIGN_ENTITLEMENTS: FocusPet/Resources/FocusPet.entitlements
         CODE_SIGN_STYLE: Automatic
         PRODUCT_NAME: FocusPet
+    dependencies:
+      # Native Messaging host for the browser extension, at Contents/Helpers/FocusPetBridge
+      - target: FocusPetBridge
+        embed: true
+        codeSign: true
+        copy:
+          destination: wrapper
+          subpath: Contents/Helpers
     entitlements:
       path: FocusPet/Resources/FocusPet.entitlements
       # Declared here because xcodegen regenerates the file; without it AppleScript URL reads fail.
       properties:
         com.apple.security.automation.apple-events: true
+
+  FocusPetBridge:
+    type: tool
+    platform: macOS
+    sources:
+      - FocusPetBridge
+    settings:
+      base:
+        PRODUCT_NAME: FocusPetBridge
+        PRODUCT_BUNDLE_IDENTIFIER: com.focuspet.bridge
+        SKIP_INSTALL: YES
 
   FocusPetTests:
     type: bundle.unit-test

@@ -23,6 +23,8 @@ final class NudgeScene: ObservableObject {
     private var script: Task<Void, Never>?
     private var isExiting = false
     private var onFinished: (() -> Void)?
+    /// Called as each beat starts, so the browser page can react in sync (hold on alert, dissolve on dismiss).
+    var onPhase: ((PetAnimation) -> Void)?
 
     var spriteWidth: CGFloat { SpriteView(sheet: sheet, animation: .idle, height: spriteHeight).width }
     private var offstageX: CGFloat { -spriteWidth - 20 }
@@ -104,10 +106,14 @@ final class NudgeScene: ObservableObject {
         CGPoint(x: offsetX + spriteWidth * 0.45, y: bottomInset + spriteHeight + bubbleGap)
     }
 
+    /// Seconds from the start of the sweep until he's done lowering his hand.
+    var sweepDuration: TimeInterval { clipDuration(.dismiss) + 0.15 + clipDuration(.settle) }
+
     private func play(_ next: PetAnimation) {
         Log.overlay.debug("play \(String(describing: next), privacy: .public)")
         animation = next
         animationStart = Date()
+        onPhase?(next)
     }
 
     private func clipDuration(_ a: PetAnimation) -> TimeInterval { sheet?.clip(a).duration ?? 0.5 }

@@ -142,7 +142,7 @@ Extension/
 |---|---|---|
 | **0** | Answer D1–D4 | ✅ recommendations adopted |
 | **1** | `dev/harness.html` + `dissolve.js` ✅ built | The effect looks right in a plain page, including reduced-motion and the no-snapshot fallback |
-| **2** | Extension + `FocusPetBridge` + `BrowserBridge`, Chrome only | **Test Nudge** on a YouTube tab: page holds on raise-hand, dissolves on the sweep, veil appears; other tabs untouched; nothing breaks if the app isn't running |
+| **2** | Extension + `FocusPetBridge` + `BrowserBridge`, Chrome only ✅ built | **Test Nudge** on a YouTube tab: page holds on raise-hand, dissolves on the sweep, veil appears; other tabs untouched; nothing breaks if the app isn't running |
 | **3** | Brave / Edge / Arc manifests, Firefox port | Same check in each browser |
 | **4** | Extension reports the active tab URL → `ActivityMonitor` prefers it over AppleScript/AX | Tracking works in Firefox, with no Automation prompt needed |
 | **5** | Strict mode (close tab), Safari Web Extension | Needs Xcode for Safari |
@@ -171,3 +171,10 @@ Open `Extension/dev/harness.html` directly in Chrome (`file://` is fine). It's a
 - **Duration, Tile px, Gold %, Reduced motion** are tuning knobs, remembered in `localStorage`. Once they look right, copy them into `DEFAULTS` at the top of `dissolve.js`.
 
 Checked in headless Chrome: media pauses on hold; scatter, cover, and reduced-motion all reach the veil; a second dissolve is refused; `release()` mid-effect cleans up; Return anyway (keyboard) fires `onReturn`; double injection is a no-op; no console errors.
+
+## Phase 2 notes (as built)
+
+- **Routing:** the app broadcasts every message to all connected helpers. Each extension acts only if one of its windows is focused and the active tab matches the host (for Test Nudge, which sends `test: true`: any http(s) tab in the last-focused window). This replaces the "route to the frontmost browser" idea.
+- **Helper:** if the app isn't running, it keeps retrying the socket every 2 s and replays the extension's `hello` on connect. It also sends the extension `connected` / `appUnavailable`.
+- **Debug overrides:** `FOCUSPET_BRIDGE_SOCKET` overrides the socket path for both the app and the helper.
+- **Checked:** Swift tests cover line framing, the host installer, and a socket round-trip. End-to-end, a headless Chrome with the unpacked extension and the real helper against a stand-in app socket handled `hello`, `hold` (ack ok), and `dissolve` (ack ok, scatter mode).

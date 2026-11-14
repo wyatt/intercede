@@ -13,19 +13,23 @@
 		2C0A6F736386603E83C5E93C /* UsageStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45C57E1494C9349EB61854CE /* UsageStore.swift */; };
 		2E8FF8AA08BBF1EC4B4EA688 /* StatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 034ACF06F3CAF2ED6CDF3184 /* StatsView.swift */; };
 		377B54A37C76DC280C911146 /* bishop.png in Resources */ = {isa = PBXBuildFile; fileRef = 12C8A4ABB38AC71557BF16E6 /* bishop.png */; };
+		4674749149C07B330A7483C0 /* FocusPetBridge in Embed Dependencies */ = {isa = PBXBuildFile; fileRef = 6F658075137385529AC03411 /* FocusPetBridge */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		48B299226AB7FEE9A410E571 /* Pet.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBAABD2AB8C1F56A73C8B0C5 /* Pet.swift */; };
 		49A2737FDABDB78A51DABD3C /* SpriteSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7414061C6E5B91FAB6245CF /* SpriteSheet.swift */; };
 		63F4D8495002556FF82DB7F2 /* PetdexClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4199E3204D744B17671E528B /* PetdexClient.swift */; };
 		75A0A20B7DE43A26E8842D7A /* PetLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1F6732DBE6F43AC6535805 /* PetLibrary.swift */; };
 		7F48945E137C177D330862B9 /* BrowserURLParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A63ABCE6201F2C025A6D347 /* BrowserURLParser.swift */; };
 		A81CA6058510BD6F27F4CC0F /* SpriteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2D876C3E5EC3ECB81CC8546 /* SpriteView.swift */; };
+		AD348B974AF128B7D5A63646 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68E8078A24A567F9487F131C /* main.swift */; };
 		B29565FE986987CC19756FEF /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2564BE6EBADE154CD04CDE16 /* SettingsView.swift */; };
 		B826AEB7C90F8AFFE276CFAB /* FocusPetApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 367860D19928193642E31274 /* FocusPetApp.swift */; };
 		BD8CDD4FBB2E69C5C10AAA50 /* UsageTrackerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E87CE779A6DC3161BD295B5 /* UsageTrackerTests.swift */; };
 		BF27905899BD51EC8132C2A2 /* AppIcon.icns in Resources */ = {isa = PBXBuildFile; fileRef = BE63002D626DD210B4EAD814 /* AppIcon.icns */; };
+		DE14DC04E020EAA17867C2BB /* NativeHostInstaller.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14B819B1D0013A418F13D257 /* NativeHostInstaller.swift */; };
 		DF0D535C64E5059DD118AD71 /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC4EE3EBF41AF9C284CDECBC /* Log.swift */; };
 		E16AF7AF9522D4A5359287B9 /* SpriteOverlayWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BF18573BDA11AAB03061026 /* SpriteOverlayWindow.swift */; };
 		E6DEBFDF7E2E63EDD806C611 /* NudgeOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F6C530D95016F7AF39177A3 /* NudgeOverlayView.swift */; };
+		EFB6A8C8450E6EC41798C5EB /* BrowserBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 422DC8EE704C68307D50DF95 /* BrowserBridge.swift */; };
 		F44DD58782E9BFA0E3DB8A88 /* AccessibilityPermission.swift in Sources */ = {isa = PBXBuildFile; fileRef = 794C7F997ABA9654E006281B /* AccessibilityPermission.swift */; };
 		FA54E1D62256483007C3BED5 /* UsageTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAB13CF8EC3A7F272D586DAA /* UsageTracker.swift */; };
 /* End PBXBuildFile section */
@@ -38,12 +42,34 @@
 			remoteGlobalIDString = D581AC77A8B043038D96A87F;
 			remoteInfo = FocusPet;
 		};
+		6A43E77ABA6B8A32FEA277ED /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E96B13CAE04EF3C8B3449100 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 4CEBC9EF22A83BEB81CB0808;
+			remoteInfo = FocusPetBridge;
+		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		2733FC789D6EC872BA4EBA97 /* Embed Dependencies */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = Contents/Helpers;
+			dstSubfolderSpec = 1;
+			files = (
+				4674749149C07B330A7483C0 /* FocusPetBridge in Embed Dependencies */,
+			);
+			name = "Embed Dependencies";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		034ACF06F3CAF2ED6CDF3184 /* StatsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsView.swift; sourceTree = "<group>"; };
 		0F6C530D95016F7AF39177A3 /* NudgeOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NudgeOverlayView.swift; sourceTree = "<group>"; };
 		12C8A4ABB38AC71557BF16E6 /* bishop.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = bishop.png; sourceTree = "<group>"; };
+		14B819B1D0013A418F13D257 /* NativeHostInstaller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeHostInstaller.swift; sourceTree = "<group>"; };
 		1BF18573BDA11AAB03061026 /* SpriteOverlayWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpriteOverlayWindow.swift; sourceTree = "<group>"; };
 		20EA36B473DF5004A044EEB6 /* ActivityMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityMonitor.swift; sourceTree = "<group>"; };
 		2564BE6EBADE154CD04CDE16 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
@@ -51,10 +77,13 @@
 		2E0E1ADD425FAF6327798AF9 /* NudgeCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NudgeCoordinator.swift; sourceTree = "<group>"; };
 		367860D19928193642E31274 /* FocusPetApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusPetApp.swift; sourceTree = "<group>"; };
 		4199E3204D744B17671E528B /* PetdexClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetdexClient.swift; sourceTree = "<group>"; };
+		422DC8EE704C68307D50DF95 /* BrowserBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserBridge.swift; sourceTree = "<group>"; };
 		45C57E1494C9349EB61854CE /* UsageStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsageStore.swift; sourceTree = "<group>"; };
 		5963A07821D3580A87D1C2B7 /* FocusPet.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FocusPet.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		68E8078A24A567F9487F131C /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		6E3878FB6187C0E718736A8D /* FocusPet.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = FocusPet.entitlements; sourceTree = "<group>"; };
 		6E87CE779A6DC3161BD295B5 /* UsageTrackerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsageTrackerTests.swift; sourceTree = "<group>"; };
+		6F658075137385529AC03411 /* FocusPetBridge */ = {isa = PBXFileReference; includeInIndex = 0; path = FocusPetBridge; sourceTree = BUILT_PRODUCTS_DIR; };
 		794C7F997ABA9654E006281B /* AccessibilityPermission.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityPermission.swift; sourceTree = "<group>"; };
 		7A63ABCE6201F2C025A6D347 /* BrowserURLParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserURLParser.swift; sourceTree = "<group>"; };
 		A1C7C2FA3025CD242411511A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -69,10 +98,19 @@
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
+		0EA884ECAD7D5A9B7798FF66 /* FocusPetBridge */ = {
+			isa = PBXGroup;
+			children = (
+				68E8078A24A567F9487F131C /* main.swift */,
+			);
+			path = FocusPetBridge;
+			sourceTree = "<group>";
+		};
 		0F17D99635476FB23F2AA81C /* FocusPet */ = {
 			isa = PBXGroup;
 			children = (
 				E21A0E7944D6277263C6BCA7 /* App */,
+				0FB6E4013B4F62A577BCB51A /* Bridge */,
 				8FA9EE17E08ACC29471E4A36 /* MenuBar */,
 				9C0AC26D870DF36C4CFDC861 /* Monitor */,
 				47C6E06724936D124034E82E /* Nudge */,
@@ -83,6 +121,15 @@
 				F07F99B668EA2D51959395C4 /* Usage */,
 			);
 			path = FocusPet;
+			sourceTree = "<group>";
+		};
+		0FB6E4013B4F62A577BCB51A /* Bridge */ = {
+			isa = PBXGroup;
+			children = (
+				422DC8EE704C68307D50DF95 /* BrowserBridge.swift */,
+				14B819B1D0013A418F13D257 /* NativeHostInstaller.swift */,
+			);
+			path = Bridge;
 			sourceTree = "<group>";
 		};
 		1983D6E005FE6A0CDFE57843 /* Resources */ = {
@@ -100,6 +147,7 @@
 			isa = PBXGroup;
 			children = (
 				0F17D99635476FB23F2AA81C /* FocusPet */,
+				0EA884ECAD7D5A9B7798FF66 /* FocusPetBridge */,
 				6559396CB755EFB7CAA6D71D /* FocusPetTests */,
 				2A118FAA3DD2683C8A4919A5 /* Products */,
 			);
@@ -109,6 +157,7 @@
 			isa = PBXGroup;
 			children = (
 				5963A07821D3580A87D1C2B7 /* FocusPet.app */,
+				6F658075137385529AC03411 /* FocusPetBridge */,
 				A95AB0DE5E5AD30593156547 /* FocusPetTests.xctest */,
 			);
 			name = Products;
@@ -225,16 +274,35 @@
 			productReference = A95AB0DE5E5AD30593156547 /* FocusPetTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
+		4CEBC9EF22A83BEB81CB0808 /* FocusPetBridge */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E155DE51F1D6507A8FDE352E /* Build configuration list for PBXNativeTarget "FocusPetBridge" */;
+			buildPhases = (
+				3BEEDF46A46D7C1DE2A48FB9 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = FocusPetBridge;
+			packageProductDependencies = (
+			);
+			productName = FocusPetBridge;
+			productReference = 6F658075137385529AC03411 /* FocusPetBridge */;
+			productType = "com.apple.product-type.tool";
+		};
 		D581AC77A8B043038D96A87F /* FocusPet */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 5DFD3C2F54348DC51D5C6690 /* Build configuration list for PBXNativeTarget "FocusPet" */;
 			buildPhases = (
 				C80D2ADDEC6D5C89A1C19351 /* Sources */,
 				27CC79D1B3B4FF29E311CAB5 /* Resources */,
+				2733FC789D6EC872BA4EBA97 /* Embed Dependencies */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				B7E826D9EEC1BC862EC1C615 /* PBXTargetDependency */,
 			);
 			name = FocusPet;
 			packageProductDependencies = (
@@ -272,6 +340,7 @@
 			projectRoot = "";
 			targets = (
 				D581AC77A8B043038D96A87F /* FocusPet */,
+				4CEBC9EF22A83BEB81CB0808 /* FocusPetBridge */,
 				36B970D316C94DC532C097C9 /* FocusPetTests */,
 			);
 		};
@@ -290,16 +359,26 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		3BEEDF46A46D7C1DE2A48FB9 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AD348B974AF128B7D5A63646 /* main.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		C80D2ADDEC6D5C89A1C19351 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 				F44DD58782E9BFA0E3DB8A88 /* AccessibilityPermission.swift in Sources */,
 				0C4714B443676F6273B1E394 /* ActivityMonitor.swift in Sources */,
+				EFB6A8C8450E6EC41798C5EB /* BrowserBridge.swift in Sources */,
 				7F48945E137C177D330862B9 /* BrowserURLParser.swift in Sources */,
 				B826AEB7C90F8AFFE276CFAB /* FocusPetApp.swift in Sources */,
 				DF0D535C64E5059DD118AD71 /* Log.swift in Sources */,
 				25D11733C832E56AAD66E484 /* MenuBarController.swift in Sources */,
+				DE14DC04E020EAA17867C2BB /* NativeHostInstaller.swift in Sources */,
 				23D3FFFAB5631247319470BC /* NudgeCoordinator.swift in Sources */,
 				E6DEBFDF7E2E63EDD806C611 /* NudgeOverlayView.swift in Sources */,
 				48B299226AB7FEE9A410E571 /* Pet.swift in Sources */,
@@ -326,6 +405,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		B7E826D9EEC1BC862EC1C615 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 4CEBC9EF22A83BEB81CB0808 /* FocusPetBridge */;
+			targetProxy = 6A43E77ABA6B8A32FEA277ED /* PBXContainerItemProxy */;
+		};
 		F14854B7B0FD78590BA3364C /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = D581AC77A8B043038D96A87F /* FocusPet */;
@@ -334,6 +418,21 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		105E2D0CF53809BBB3FF9953 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.focuspet.bridge;
+				PRODUCT_NAME = FocusPetBridge;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+			};
+			name = Release;
+		};
 		2902FEB1499EAFE9B8CA1A5C /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -505,6 +604,21 @@
 			};
 			name = Release;
 		};
+		CE97E949B27B95CEDEF3EAE8 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.focuspet.bridge;
+				PRODUCT_NAME = FocusPetBridge;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+			};
+			name = Debug;
+		};
 		E00591C1F57DBA3ADB02F931 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -549,6 +663,15 @@
 			buildConfigurations = (
 				4A04F292B48B61F831544D20 /* Debug */,
 				645819640E8A3BD910FAED3A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		E155DE51F1D6507A8FDE352E /* Build configuration list for PBXNativeTarget "FocusPetBridge" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CE97E949B27B95CEDEF3EAE8 /* Debug */,
+				105E2D0CF53809BBB3FF9953 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

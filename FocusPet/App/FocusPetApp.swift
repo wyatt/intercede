@@ -17,6 +17,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var usageTracker: UsageTracker?
     private var nudgeCoordinator: NudgeCoordinator?
     private var petLibrary: PetLibrary?
+    private var browserBridge: BrowserBridge?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
@@ -25,17 +26,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let activityMonitor = ActivityMonitor(usageTracker: usageTracker)
         let petdex = PetdexClient()
         let petLibrary = PetLibrary(petdexClient: petdex)
-        let nudgeCoordinator = NudgeCoordinator(usageTracker: usageTracker, petLibrary: petLibrary)
+        let browserBridge = BrowserBridge()
+        browserBridge.start()
+        NativeHostInstaller.install()
+        let nudgeCoordinator = NudgeCoordinator(usageTracker: usageTracker, petLibrary: petLibrary, browserBridge: browserBridge)
         let menuBarController = MenuBarController(usageTracker: usageTracker, activityMonitor: activityMonitor, nudgeCoordinator: nudgeCoordinator, petLibrary: petLibrary)
 
         self.usageTracker = usageTracker
         self.petLibrary = petLibrary
+        self.browserBridge = browserBridge
         self.nudgeCoordinator = nudgeCoordinator
         self.activityMonitor = activityMonitor
         self.menuBarController = menuBarController
 
         AccessibilityPermission.requestIfNeeded()
         activityMonitor.start()
+    }
+
+    func applicationWillTerminate(_ notification: Notification) {
+        browserBridge?.stop()
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {

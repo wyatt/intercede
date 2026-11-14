@@ -6,7 +6,7 @@ BUILD_DIR = $(DERIVED)/Build/Products/Debug
 INSTALL_DIR = $(HOME)/Applications
 XCODEBUILD = xcodebuild -project $(APP_NAME).xcodeproj -scheme $(SCHEME) -configuration Debug -derivedDataPath $(DERIVED)
 
-.PHONY: generate build test install run clean reset-tcc sprites icon
+.PHONY: generate build test install run app clean reset-tcc sprites icon
 
 # Regenerate the Xcode project from project.yml (needed after adding/removing files)
 generate:
@@ -27,6 +27,10 @@ install: build
 
 run: install
 	open $(INSTALL_DIR)/$(APP_NAME).app
+
+# Build + install + launch without Xcode (Command Line Tools only)
+app:
+	tools/build-app.sh
 
 # Repack the bishop source art into the uniform grid the app slices
 sprites:

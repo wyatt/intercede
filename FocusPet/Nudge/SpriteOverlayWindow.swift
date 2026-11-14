@@ -42,6 +42,14 @@ final class SpriteOverlayWindow: NSPanel {
     override var canBecomeKey: Bool { false }
     override var canBecomeMain: Bool { false }
 
+    /// Forwarded from the scene: each beat as it starts.
+    var onPhase: ((PetAnimation) -> Void)? {
+        get { scene.onPhase }
+        set { scene.onPhase = newValue }
+    }
+
+    var sweepDuration: TimeInterval { scene.sweepDuration }
+
     func show(onFinished: @escaping () -> Void) {
         orderFrontRegardless()
         Log.overlay.info("shown at \(NSStringFromRect(self.frame), privacy: .public), level \(self.level.rawValue)")
