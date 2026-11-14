@@ -16,16 +16,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private(set) var activityMonitor: ActivityMonitor?
     private var usageTracker: UsageTracker?
     private var nudgeCoordinator: NudgeCoordinator?
+    private var petLibrary: PetLibrary?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
 
         let usageTracker = UsageTracker()
         let activityMonitor = ActivityMonitor(usageTracker: usageTracker)
-        let nudgeCoordinator = NudgeCoordinator(usageTracker: usageTracker)
-        let menuBarController = MenuBarController(usageTracker: usageTracker, activityMonitor: activityMonitor, nudgeCoordinator: nudgeCoordinator)
+        let petdex = PetdexClient()
+        let petLibrary = PetLibrary(petdexClient: petdex)
+        let nudgeCoordinator = NudgeCoordinator(usageTracker: usageTracker, petLibrary: petLibrary)
+        let menuBarController = MenuBarController(usageTracker: usageTracker, activityMonitor: activityMonitor, nudgeCoordinator: nudgeCoordinator, petLibrary: petLibrary)
 
         self.usageTracker = usageTracker
+        self.petLibrary = petLibrary
         self.nudgeCoordinator = nudgeCoordinator
         self.activityMonitor = activityMonitor
         self.menuBarController = menuBarController

@@ -1,31 +1,40 @@
 import Foundation
 
-struct DailyUsage: Codable {
+struct DailyUsage: Codable, Equatable {
     var date: String  // "YYYY-MM-DD"
-    var seconds: [String: Double]  // host -> total seconds
+    var seconds: [String: Double]  // configured host -> total seconds
 
     init(date: String) {
         self.date = date
         self.seconds = [:]
     }
+
+    // Fixed Gregorian/POSIX so file names don't depend on the user's calendar or locale.
+    static func key(for date: Date) -> String {
+        let f = DateFormatter()
+        f.calendar = Calendar(identifier: .gregorian)
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.timeZone = .current
+        f.dateFormat = "yyyy-MM-dd"
+        return f.string(from: date)
+    }
 }
 
 final class UsageStore {
     private let directory: URL
-    private let formatter: DateFormatter = {
-        let f = DateFormatter()
-        f.dateFormat = "yyyy-MM-dd"
-        return f
-    }()
 
-    init() {
-        let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-        directory = appSupport.appendingPathComponent("FocusPet")
-        try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+    init(directory: URL? = nil) {
+        if let directory {
+            self.directory = directory
+        } else {
+            let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+            self.directory = appSupport.appendingPathComponent("FocusPet")
+        }
+        try? FileManager.default.createDirectory(at: self.directory, withIntermediateDirectories: true)
     }
 
     func load(for date: Date) -> DailyUsage {
-        let key = formatter.string(from: date)
+        let key = DailyUsage.key(for: date)
         let file = directory.appendingPathComponent("usage-\(key).json")
         guard let data = try? Data(contentsOf: file),
               let usage = try? JSONDecoder().decode(DailyUsage.self, from: data) else {

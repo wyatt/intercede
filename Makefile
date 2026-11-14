@@ -1,17 +1,26 @@
-DERIVED = $(HOME)/Library/Developer/Xcode/DerivedData
 APP_NAME = FocusPet
 SCHEME = FocusPet
 BUNDLE_ID = com.focuspet.app
-BUILD_DIR = $(shell xcodebuild -project $(APP_NAME).xcodeproj -scheme $(SCHEME) -configuration Debug -showBuildSettings 2>/dev/null | grep '^\s*BUILT_PRODUCTS_DIR' | head -1 | sed 's/.*= //')
+DERIVED = .build/DerivedData
+BUILD_DIR = $(DERIVED)/Build/Products/Debug
 INSTALL_DIR = $(HOME)/Applications
+XCODEBUILD = xcodebuild -project $(APP_NAME).xcodeproj -scheme $(SCHEME) -configuration Debug -derivedDataPath $(DERIVED)
 
-.PHONY: build install run clean reset-tcc
+.PHONY: generate build test install run clean reset-tcc sprites icon
 
-build:
-	xcodebuild -project $(APP_NAME).xcodeproj -scheme $(SCHEME) -configuration Debug build
+# Regenerate the Xcode project from project.yml (needed after adding/removing files)
+generate:
+	xcodegen generate
+
+build: generate
+	$(XCODEBUILD) build
+
+test: generate
+	$(XCODEBUILD) test
 
 install: build
 	pkill -x $(APP_NAME) 2>/dev/null || true
+	mkdir -p $(INSTALL_DIR)
 	rm -rf $(INSTALL_DIR)/$(APP_NAME).app
 	cp -R "$(BUILD_DIR)/$(APP_NAME).app" $(INSTALL_DIR)/$(APP_NAME).app
 	@echo "Installed to $(INSTALL_DIR)/$(APP_NAME).app"
@@ -19,9 +28,18 @@ install: build
 run: install
 	open $(INSTALL_DIR)/$(APP_NAME).app
 
+# Repack the bishop source art into the uniform grid the app slices
+sprites:
+	swift tools/pack-sprite.swift Art/bishop-source.png FocusPet/Resources/Pets/bishop.png 6,4,6,6,6,4,6
+
+# Rebuild the app icon from the bishop sprite
+icon:
+	swift tools/make-icon.swift FocusPet/Resources/Pets/bishop.png FocusPet/Resources/AppIcon.icns
+
 reset-tcc:
 	tccutil reset Accessibility $(BUNDLE_ID)
-	@echo "Accessibility permission reset — re-grant on next launch"
+	tccutil reset AppleEvents $(BUNDLE_ID)
+	@echo "Accessibility + Automation permissions reset — re-grant on next launch"
 
 clean:
-	xcodebuild -project $(APP_NAME).xcodeproj -scheme $(SCHEME) clean
+	rm -rf $(DERIVED)

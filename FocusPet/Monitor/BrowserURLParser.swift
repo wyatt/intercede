@@ -12,6 +12,10 @@ enum Browser: String, CaseIterable {
 
     var bundleID: String { rawValue }
 
+    var displayName: String {
+        appleScriptName ?? "Firefox"
+    }
+
     var appleScriptName: String? {
         switch self {
         case .safari: return "Safari"
@@ -24,34 +28,50 @@ enum Browser: String, CaseIterable {
     }
 }
 
-struct BrowserURLParser {
+enum BrowserURLParser {
     // AppleScript path: Automation permission keyed by bundle ID — survives binary updates.
     // AX path: Accessibility permission keyed by code signature — resets on rebuild.
+    @MainActor
     static func extractHost(appPID: pid_t, browser: Browser) -> String? {
         if let url = appleScriptURL(for: browser) {
             return host(from: url)
         }
         if let url = axURL(appPID: appPID, browser: browser) {
-            return host(from: url.hasPrefix("http") ? url : "https://\(url)")
+            return host(from: url)
         }
         return nil
     }
 
     // MARK: - AppleScript (primary)
 
+    @MainActor private static var compiledScripts: [Browser: NSAppleScript] = [:]
+
+    @MainActor
     static func appleScriptURL(for browser: Browser) -> String? {
-        guard let appName = browser.appleScriptName else { return nil }
-        let script: String
-        switch browser {
-        case .safari:
-            script = "tell application \"\(appName)\" to if (count of windows) > 0 then get URL of current tab of front window"
-        default:
-            script = "tell application \"\(appName)\" to if (count of windows) > 0 then get URL of active tab of front window"
-        }
+        guard let script = compiledScript(for: browser) else { return nil }
         var error: NSDictionary?
-        let result = NSAppleScript(source: script)?.executeAndReturnError(&error)
-        guard error == nil, let urlString = result?.stringValue, !urlString.isEmpty else { return nil }
+        let result = script.executeAndReturnError(&error)
+        guard error == nil, let urlString = result.stringValue, !urlString.isEmpty else { return nil }
         return urlString
+    }
+
+    // Compiled once per browser. The timeout keeps a hung browser from freezing the app's main
+    // thread (the Apple Event default is two minutes).
+    @MainActor
+    private static func compiledScript(for browser: Browser) -> NSAppleScript? {
+        if let cached = compiledScripts[browser] { return cached }
+        guard let appName = browser.appleScriptName else { return nil }
+        let tab = browser == .safari ? "current tab" : "active tab"
+        let source = """
+        with timeout of 2 seconds
+            tell application "\(appName)" to if (count of windows) > 0 then get URL of \(tab) of front window
+        end timeout
+        """
+        guard let script = NSAppleScript(source: source) else { return nil }
+        var error: NSDictionary?
+        guard script.compileAndReturnError(&error) else { return nil }
+        compiledScripts[browser] = script
+        return script
     }
 
     // MARK: - AX tree walk (fallback when Automation not yet approved)
@@ -63,14 +83,16 @@ struct BrowserURLParser {
 
     static func frontWindow(appPID: pid_t) -> AXUIElement? {
         let axApp = AXUIElementCreateApplication(appPID)
+        for attribute in [kAXFocusedWindowAttribute, kAXMainWindowAttribute] {
+            var ref: AnyObject?
+            if AXUIElementCopyAttributeValue(axApp, attribute as CFString, &ref) == .success,
+               let w = ref, CFGetTypeID(w) == AXUIElementGetTypeID() {
+                return (w as! AXUIElement)
+            }
+        }
         var ref: AnyObject?
-        AXUIElementCopyAttributeValue(axApp, kAXFocusedWindowAttribute as CFString, &ref)
-        if let w = ref { return (w as! AXUIElement) }
-        AXUIElementCopyAttributeValue(axApp, kAXMainWindowAttribute as CFString, &ref)
-        if let w = ref { return (w as! AXUIElement) }
         AXUIElementCopyAttributeValue(axApp, kAXWindowsAttribute as CFString, &ref)
-        if let windows = ref as? [AXUIElement], let first = windows.first { return first }
-        return nil
+        return (ref as? [AXUIElement])?.first
     }
 
     private static func urlFromWindow(_ window: AXUIElement, browser: Browser) -> String? {
@@ -115,44 +137,17 @@ struct BrowserURLParser {
 
     // MARK: - Shared helpers
 
+    /// Host for a URL or bare domain, lowercased with any leading "www." removed.
     static func host(from urlString: String) -> String? {
-        let full = urlString.hasPrefix("http") ? urlString : "https://\(urlString)"
-        guard let url = URL(string: full), let host = url.host else { return nil }
+        let trimmed = urlString.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty, !trimmed.contains(" ") else { return nil }
+        let full = trimmed.contains("://") ? trimmed : "https://\(trimmed)"
+        guard let url = URL(string: full), let host = url.host?.lowercased(), !host.isEmpty else { return nil }
         return host.hasPrefix("www.") ? String(host.dropFirst(4)) : host
     }
 
     static func looksLikeDomain(_ s: String) -> Bool {
         let pattern = #"^[a-z0-9]([a-z0-9\-]{0,61}[a-z0-9])?(\.[a-z]{2,}){1,3}(/.*)?$"#
         return s.range(of: pattern, options: [.regularExpression, .caseInsensitive]) != nil
-    }
-
-    // MARK: - Diagnostics
-
-    static func rawAddressBarValue(appPID: pid_t) -> String? {
-        guard let window = frontWindow(appPID: appPID) else { return "no-window" }
-        return findAddressBar(in: window, depth: 0)
-    }
-
-    static func dumpAXTree(appPID: pid_t) -> String {
-        guard let window = frontWindow(appPID: appPID) else { return "no window found (pid \(appPID))" }
-        var lines: [String] = []
-        dumpElement(window, depth: 0, maxDepth: 8, lines: &lines)
-        return lines.joined(separator: "\n")
-    }
-
-    private static func dumpElement(_ el: AXUIElement, depth: Int, maxDepth: Int, lines: inout [String]) {
-        guard depth <= maxDepth else { return }
-        let indent = String(repeating: "  ", count: depth)
-        var roleRef: AnyObject?; AXUIElementCopyAttributeValue(el, kAXRoleAttribute as CFString, &roleRef)
-        var valRef: AnyObject?; AXUIElementCopyAttributeValue(el, kAXValueAttribute as CFString, &valRef)
-        var descRef: AnyObject?; AXUIElementCopyAttributeValue(el, kAXDescriptionAttribute as CFString, &descRef)
-        let role = (roleRef as? String) ?? "?"
-        let val = (valRef as? String).map { v in v.count > 60 ? String(v.prefix(60)) + "…" : v } ?? ""
-        let desc = (descRef as? String) ?? ""
-        lines.append("\(indent)[\(role)] desc=\(desc) val=\(val)")
-        var childrenRef: AnyObject?
-        AXUIElementCopyAttributeValue(el, kAXChildrenAttribute as CFString, &childrenRef)
-        guard let children = childrenRef as? [AXUIElement] else { return }
-        for child in children { dumpElement(child, depth: depth + 1, maxDepth: maxDepth, lines: &lines) }
     }
 }

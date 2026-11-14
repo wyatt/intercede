@@ -2,19 +2,18 @@ import SwiftUI
 
 struct SettingsView: View {
     @ObservedObject var usageTracker: UsageTracker
+    @ObservedObject var petLibrary: PetLibrary
     @State private var newHost = ""
-    @State private var apiKey = Keychain.load(forKey: "anthropicAPIKey") ?? ""
-    @State private var showAPIKeyMismatch = false
 
     var body: some View {
         TabView {
             SitesTab(usageTracker: usageTracker, newHost: $newHost)
                 .tabItem { Label("Sites", systemImage: "globe") }
 
-            APIKeyTab(apiKey: $apiKey)
-                .tabItem { Label("API", systemImage: "key.fill") }
+            PetTab(petLibrary: petLibrary)
+                .tabItem { Label("Pet", systemImage: "pawprint.fill") }
         }
-        .frame(width: 420, height: 360)
+        .frame(width: 440, height: 380)
         .padding()
     }
 }
@@ -22,6 +21,7 @@ struct SettingsView: View {
 struct SitesTab: View {
     @ObservedObject var usageTracker: UsageTracker
     @Binding var newHost: String
+    @State private var rejected = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -51,7 +51,6 @@ struct SitesTab: View {
                 }
                 .onDelete { indices in
                     usageTracker.siteConfigs.remove(atOffsets: indices)
-                    usageTracker.saveSiteConfigs()
                 }
             }
             .frame(minHeight: 160)
@@ -60,48 +59,57 @@ struct SitesTab: View {
                 TextField("new site (e.g. twitch.tv)", text: $newHost)
                     .font(.system(size: 12, design: .monospaced))
                     .textFieldStyle(.roundedBorder)
-                Button("Add") {
-                    let host = newHost.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-                    guard !host.isEmpty, !usageTracker.siteConfigs.contains(where: { $0.host == host }) else { return }
-                    usageTracker.siteConfigs.append(SiteConfig(host: host, dailyBudgetSeconds: 15 * 60))
-                    usageTracker.saveSiteConfigs()
-                    newHost = ""
-                }
-                .disabled(newHost.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    .onSubmit(add)
+                    .onChange(of: newHost) { rejected = false }
+                Button("Add", action: add)
+                    .disabled(newHost.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            }
+            if rejected {
+                Text("Not a valid site, or already tracked.")
+                    .font(.system(size: 11, design: .monospaced))
+                    .foregroundColor(.red)
             }
         }
         .padding()
     }
+
+    private func add() {
+        if usageTracker.addSite(newHost) {
+            newHost = ""
+        } else {
+            rejected = true
+        }
+    }
 }
 
-struct APIKeyTab: View {
-    @Binding var apiKey: String
-    @State private var saved = false
+struct PetTab: View {
+    @ObservedObject var petLibrary: PetLibrary
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Anthropic API Key")
+            Text("Companion")
                 .font(.system(size: 13, weight: .semibold, design: .monospaced))
-            Text("Used to generate personalized nudge messages. Falls back to built-in messages if blank.")
-                .font(.system(size: 11))
-                .foregroundColor(.secondary)
 
-            SecureField("sk-ant-...", text: $apiKey)
-                .font(.system(size: 12, design: .monospaced))
-                .textFieldStyle(.roundedBorder)
-
-            HStack {
-                Button("Save") {
-                    Keychain.save(apiKey, forKey: "anthropicAPIKey")
-                    saved = true
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) { saved = false }
-                }
-                if saved {
-                    Text("Saved!")
-                        .font(.system(size: 11, design: .monospaced))
-                        .foregroundColor(.green)
+            Picker("Pet", selection: $petLibrary.selectedPetSlug) {
+                ForEach(petLibrary.availablePets) { pet in
+                    Text(pet.name).tag(pet.slug)
                 }
             }
+
+            let current = petLibrary.current
+            HStack {
+                Spacer()
+                VStack(spacing: 8) {
+                    SpriteView(sheet: current.sheet, animation: .idle, height: 140)
+                    Text("“\(current.pet.catchphrase)”")
+                        .font(.system(size: 12, weight: .bold, design: .monospaced))
+                }
+                Spacer()
+            }
+
+            Text("Other pets download from Petdex on first use; \(Pet.stAlphonsus.name) fills in until they're ready.")
+                .font(.system(size: 11))
+                .foregroundColor(.secondary)
 
             Spacer()
         }

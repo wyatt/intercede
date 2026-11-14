@@ -28,6 +28,9 @@ targets:
         PRODUCT_NAME: FocusPet
     entitlements:
       path: FocusPet/Resources/FocusPet.entitlements
+      # Declared here because xcodegen regenerates the file; without it AppleScript URL reads fail.
+      properties:
+        com.apple.security.automation.apple-events: true
 
   FocusPetTests:
     type: bundle.unit-test
@@ -41,3 +44,13 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.focuspet.tests
         BUNDLE_LOADER: "$(TEST_HOST)"
         TEST_HOST: "$(BUILT_PRODUCTS_DIR)/FocusPet.app/Contents/MacOS/FocusPet"
+
+schemes:
+  FocusPet:
+    build:
+      targets:
+        FocusPet: all
+        FocusPetTests: [test]
+    test:
+      targets:
+        - FocusPetTests

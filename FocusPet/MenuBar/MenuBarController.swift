@@ -8,12 +8,14 @@ final class MenuBarController: NSObject {
     private let usageTracker: UsageTracker
     private let activityMonitor: ActivityMonitor
     private let nudgeCoordinator: NudgeCoordinator
+    private let petLibrary: PetLibrary
     private var settingsWindow: NSWindow?
 
-    init(usageTracker: UsageTracker, activityMonitor: ActivityMonitor, nudgeCoordinator: NudgeCoordinator) {
+    init(usageTracker: UsageTracker, activityMonitor: ActivityMonitor, nudgeCoordinator: NudgeCoordinator, petLibrary: PetLibrary) {
         self.usageTracker = usageTracker
         self.activityMonitor = activityMonitor
         self.nudgeCoordinator = nudgeCoordinator
+        self.petLibrary = petLibrary
         super.init()
         setupStatusItem()
         setupPopover()
@@ -22,8 +24,8 @@ final class MenuBarController: NSObject {
     private func setupStatusItem() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         if let button = statusItem.button {
-            button.image = pixelPetIcon()
-            button.image?.isTemplate = false
+            button.image = Self.menuBarIcon()
+            button.toolTip = "FocusPet"
             button.action = #selector(togglePopover)
             button.target = self
         }
@@ -60,13 +62,13 @@ final class MenuBarController: NSObject {
             return
         }
         let win = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 420, height: 380),
+            contentRect: NSRect(x: 0, y: 0, width: 440, height: 400),
             styleMask: [.titled, .closable],
             backing: .buffered,
             defer: false
         )
         win.title = "FocusPet Settings"
-        win.contentViewController = NSHostingController(rootView: SettingsView(usageTracker: usageTracker))
+        win.contentViewController = NSHostingController(rootView: SettingsView(usageTracker: usageTracker, petLibrary: petLibrary))
         win.center()
         win.isReleasedWhenClosed = false
         win.makeKeyAndOrderFront(nil)
@@ -74,18 +76,40 @@ final class MenuBarController: NSObject {
         settingsWindow = win
     }
 
-    private func pixelPetIcon() -> NSImage {
-        let size = NSSize(width: 18, height: 18)
-        let img = NSImage(size: size)
-        img.lockFocus()
-        NSColor.systemGreen.setFill()
-        NSRect(x: 3, y: 3, width: 12, height: 12).fill()
-        NSColor.black.setFill()
-        NSRect(x: 5, y: 9, width: 3, height: 3).fill()
-        NSRect(x: 10, y: 9, width: 3, height: 3).fill()
-        NSRect(x: 6, y: 5, width: 6, height: 2).fill()
-        img.unlockFocus()
-        return img
+    /// Pixel-art saint: halo, head, and shoulders with a cross cut out. A template image, so
+    /// macOS tints it for light/dark menu bars and the highlighted state.
+    static func menuBarIcon() -> NSImage {
+        let rows = [
+            "..................",
+            "......######......",
+            ".....#......#.....",
+            "......######......",
+            "..................",
+            ".......####.......",
+            "......######......",
+            "......######......",
+            "......######......",
+            ".......####.......",
+            "..................",
+            ".....########.....",
+            "...############...",
+            "..######..######..",
+            "..####......####..",
+            "..######..######..",
+            "..######..######..",
+            "..................",
+        ]
+        let image = NSImage(size: NSSize(width: 18, height: 18), flipped: true) { _ in
+            NSColor.black.setFill()
+            for (y, row) in rows.enumerated() {
+                for (x, ch) in row.enumerated() where ch == "#" {
+                    NSRect(x: x, y: y, width: 1, height: 1).fill()
+                }
+            }
+            return true
+        }
+        image.isTemplate = true
+        return image
     }
 }
 
@@ -159,15 +183,6 @@ struct MenuBarPopoverView: View {
                     .font(.system(size: 10, design: .monospaced))
                     .buttonStyle(.plain)
                     .foregroundColor(.secondary)
-                Button("Copy AX Tree") {
-                    let dump = activityMonitor.lastAXDump
-                    guard !dump.isEmpty else { return }
-                    NSPasteboard.general.clearContents()
-                    NSPasteboard.general.setString(dump, forType: .string)
-                }
-                .font(.system(size: 10, design: .monospaced))
-                .buttonStyle(.plain)
-                .foregroundColor(.secondary)
                 Spacer()
                 Button("Quit") { NSApp.terminate(nil) }
                     .font(.system(size: 11, design: .monospaced))

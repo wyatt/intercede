@@ -4,16 +4,15 @@ import Combine
 @MainActor
 final class NudgeCoordinator {
     private let usageTracker: UsageTracker
-    private let speechService = SpeechBubbleService()
-    private var petLibrary: PetLibrary?
+    private let petLibrary: PetLibrary
     private var cancellables = Set<AnyCancellable>()
     private var activeOverlay: SpriteOverlayWindow?
+    // True from show until the pet has walked off, so breaches can't stack overlays.
+    private var isPresenting = false
 
-    init(usageTracker: UsageTracker) {
+    init(usageTracker: UsageTracker, petLibrary: PetLibrary) {
         self.usageTracker = usageTracker
-        let petdex = PetdexClient()
-        self.petLibrary = PetLibrary(petdexClient: petdex)
-        petdex.fetchCatalog()
+        self.petLibrary = petLibrary
 
         usageTracker.budgetBreached
             .receive(on: RunLoop.main)
@@ -21,50 +20,39 @@ final class NudgeCoordinator {
                 self?.handleBreach(host: host)
             }
             .store(in: &cancellables)
-
-        usageTracker.$todayUsage
-            .sink { [weak self] usage in
-                self?.checkPreFetch(usage: usage)
-            }
-            .store(in: &cancellables)
     }
 
+    /// Always shows a fresh nudge, replacing any that's already up.
     func triggerTest() {
+        activeOverlay?.abort(reason: "replaced by Test Nudge")
         handleBreach(host: "test.nudge")
     }
 
     private func handleBreach(host: String) {
-        guard activeOverlay == nil || !activeOverlay!.isVisible else { return }
+        guard !isPresenting else {
+            Log.overlay.info("breach for \(host, privacy: .public) ignored: nudge already presenting")
+            return
+        }
+        guard let screen = Self.screenUnderMouse() else { return }
+        isPresenting = true
 
-        let budget = usageTracker.budget(for: host) ?? 0
-        let used = usageTracker.seconds(for: host)
-        let secondsOver = used - budget
-
-        Task {
-            let message = await speechService.nudgeMessage(host: host, secondsOver: secondsOver)
-            let screen = NSScreen.main ?? NSScreen.screens.first!
-            let window = SpriteOverlayWindow(
-                message: message,
-                petImage: petLibrary?.currentSpriteImage,
-                screen: screen
-            )
-            activeOverlay = window
-            window.show()
+        let (pet, sheet) = petLibrary.current
+        let window = SpriteOverlayWindow(
+            headline: pet.catchphrase,
+            message: pet.randomPhrase(host: host),
+            sheet: sheet,
+            screen: screen
+        )
+        activeOverlay = window
+        window.show { [weak self] in
+            self?.activeOverlay = nil
+            self?.isPresenting = false
         }
     }
 
-    private func checkPreFetch(usage: DailyUsage) {
-        for config in usageTracker.siteConfigs {
-            let used = usage.seconds[config.host] ?? 0
-            let threshold = config.dailyBudgetSeconds * 0.8
-            if used >= threshold && used < config.dailyBudgetSeconds {
-                Task {
-                    _ = await speechService.nudgeMessage(
-                        host: config.host,
-                        secondsOver: config.dailyBudgetSeconds - used
-                    )
-                }
-            }
-        }
+    /// The screen the user is looking at, which isn't necessarily `NSScreen.main` for an accessory app.
+    private static func screenUnderMouse() -> NSScreen? {
+        let mouse = NSEvent.mouseLocation
+        return NSScreen.screens.first { NSMouseInRect(mouse, $0.frame, false) } ?? NSScreen.main ?? NSScreen.screens.first
     }
 }
