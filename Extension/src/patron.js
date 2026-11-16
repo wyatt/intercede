@@ -42,6 +42,7 @@
   class Scene {
     constructor({ sheetUrl, layout, name, catchphrase, phrase }) {
       this.layout = layout;
+      this.words = { patronName: name, catchphrase, phrase };  // also shown on the veil
       this.scale = SPRITE_HEIGHT / layout.frameHeight;
       this.width = Math.round(layout.frameWidth * this.scale);
       this.offstage = -this.width - 20;
@@ -155,6 +156,7 @@
       const snapshot = await chrome.runtime.sendMessage({ type: 'capture' }).catch(() => null);
       this.host.style.visibility = '';
       const done = IntercedeDissolve.dissolve({
+        ...this.words,
         snapshot,
         durationMs: this.clipMs('dismiss') + 150 + this.clipMs('settle'),
         onReturn: () => chrome.runtime.sendMessage({ type: 'returnAnyway' }).catch(() => {}),
