@@ -12,7 +12,7 @@ When you spend too long on a tracked site (YouTube, Reddit, etc.), St. Alphonsus
 - Accumulates real wall-clock time per site per day (subdomains count toward their site; paused while the Mac sleeps or the screen is locked)
 - When a site's daily budget is exceeded, a sprite overlay animates in from the screen edge
 - Speech bubbles show the patron's catchphrase plus one of its own hand-written phrases — no network or API key needed
-- Menu bar icon shows live tracking status and today's usage stats
+- Menu bar icon (a pixel-art mountain under a halo) opens today's usage stats
 
 ---
 
@@ -22,7 +22,7 @@ When you spend too long on a tracked site (YouTube, Reddit, etc.), St. Alphonsus
 - **Daily budgets** — per-site time budgets, breach detection with 5-minute cooldown between nudges
 - **Sprite overlay** — small non-activating window in the bottom-left of the screen under the cursor; walk in → raise hand → speak → sweep the page away (automatically, ~1.5s in) → lower hand → walk out when tapped; tap sprite or bubble to dismiss, auto-dismisses 45s after the sweep
 - **Bundled patron: St. Alphonsus Liguori** — 7-animation sprite sheet shipped in the app, so nudges never depend on the network; his catchphrase "This is not Liguorian!" heads every bubble
-- **Menu bar** — pixel-art icon, popover with live budget bars per site, debug status indicator
+- **Menu bar** — pixel-art mountain icon, popover with live budget bars per site; Accessibility is only requested for Firefox, the one browser without AppleScript
 - **Settings** — site list CRUD (accepts bare hosts or pasted URLs), per-site daily budget (stepper, minutes, saved immediately), patron picker with preview
 - **More saints** — St. Isidore of Seville ("Even the patron of the internet says log off!"), St. Clare of Assisi ("As patron of screens, I've seen enough."), St. Benedict ("Idleness is the enemy of the soul!"), and St. Thomas Aquinas ("I answer that: close the tab."). Pick one in Settings → Patron
 - **Persistence** — daily usage stored as JSON in Application Support, survives restarts

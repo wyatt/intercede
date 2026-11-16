@@ -39,7 +39,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         self.activityMonitor = activityMonitor
         self.menuBarController = menuBarController
 
-        AccessibilityPermission.requestIfNeeded()
         activityMonitor.start()
     }
 

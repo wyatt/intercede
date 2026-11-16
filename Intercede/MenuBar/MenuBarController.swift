@@ -76,27 +76,27 @@ final class MenuBarController: NSObject {
         settingsWindow = win
     }
 
-    /// Pixel-art saint: halo, head, and shoulders with a cross cut out. A template image, so
-    /// macOS tints it for light/dark menu bars and the highlighted state.
+    /// Pixel-art mountain under a small halo: a snowcapped main peak with a lower peak beside it.
+    /// A template image, so macOS tints it for light/dark menu bars and the highlighted state.
     static func menuBarIcon() -> NSImage {
         let rows = [
             "..................",
-            "......######......",
-            ".....#......#.....",
-            "......######......",
             "..................",
-            ".......####.......",
-            "......######......",
-            "......######......",
-            "......######......",
-            ".......####.......",
             "..................",
-            ".....########.....",
-            "...############...",
-            "..######..######..",
-            "..####......####..",
-            "..######..######..",
-            "..######..######..",
+            ".........####.....",
+            "........#....#....",
+            ".........####.....",
+            "..................",
+            "..........##......",
+            ".........####.....",
+            "........######....",
+            "...##..#......#...",
+            "..##############..",
+            ".################.",
+            "##################",
+            "##################",
+            "##################",
+            "..................",
             "..................",
         ]
         let image = NSImage(size: NSSize(width: 18, height: 18), flipped: true) { _ in
@@ -118,7 +118,6 @@ struct MenuBarPopoverView: View {
     @ObservedObject var activityMonitor: ActivityMonitor
     let openSettings: () -> Void
     let testNudge: () -> Void
-    @State private var axGranted = AccessibilityPermission.isGranted
 
     var body: some View {
         VStack(spacing: 0) {
@@ -135,15 +134,11 @@ struct MenuBarPopoverView: View {
             .padding(.vertical, 10)
             .background(Color.secondary.opacity(0.1))
 
-            if !axGranted {
-                Button(action: {
-                    AccessibilityPermission.requestIfNeeded()
-                    axGranted = AccessibilityPermission.isGranted
-                    NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!)
-                }) {
+            if activityMonitor.needsAccessibility {
+                Button(action: AccessibilityPermission.request) {
                     HStack(spacing: 6) {
                         Image(systemName: "exclamationmark.triangle.fill").foregroundColor(.orange)
-                        Text("Accessibility permission needed")
+                        Text("Firefox needs Accessibility permission")
                             .font(.system(size: 11, design: .monospaced))
                     }
                     .padding(.horizontal, 12)
@@ -153,22 +148,6 @@ struct MenuBarPopoverView: View {
                 .buttonStyle(.plain)
                 .background(Color.orange.opacity(0.1))
             }
-
-            // Debug status row
-            HStack(spacing: 4) {
-                Circle()
-                    .fill(activityMonitor.debugStatus.hasPrefix("tracking") ? Color.green : Color.secondary.opacity(0.4))
-                    .frame(width: 6, height: 6)
-                Text(activityMonitor.debugStatus)
-                    .font(.system(size: 10, design: .monospaced))
-                    .foregroundColor(.secondary)
-                    .lineLimit(1)
-                    .truncationMode(.middle)
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 4)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color.secondary.opacity(0.05))
 
             Divider()
 
@@ -192,6 +171,5 @@ struct MenuBarPopoverView: View {
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
         }
-        .onAppear { axGranted = AccessibilityPermission.isGranted }
     }
 }

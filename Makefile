@@ -42,9 +42,9 @@ sprites:
 			echo "warning: no patron uses '$$name' (sheetName in Intercede/Patrons/Patron.swift) — misspelled file name?"; \
 	done
 
-# Rebuild the app icon from the bishop sprite
+# Rebuild the app icon (pixel-art mountain)
 icon:
-	swift tools/make-icon.swift Intercede/Resources/Patrons/liguori.png Intercede/Resources/AppIcon.icns
+	swift tools/make-icon.swift Intercede/Resources/AppIcon.icns
 
 reset-tcc:
 	tccutil reset Accessibility $(BUNDLE_ID)

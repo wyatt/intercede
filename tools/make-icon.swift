@@ -1,81 +1,113 @@
-// Builds the app icon from the bishop's idle frame: a midnight-blue squircle with a soft golden
-// halo glow behind him. Writes an .iconset and converts it to .icns with iconutil.
+// Builds the app icon: a pixel-art mountain under a golden halo, on a midnight-blue squircle.
+// The scene is a 32×32 grid drawn as hard-edged blocks (to match the pixel-art patrons), rendered
+// at 1024 px and scaled down for the smaller sizes. Writes an .iconset and converts it with iconutil.
 //
-// usage: swift tools/make-icon.swift <liguori.png> <out.icns>
-import AppKit
+// usage: swift tools/make-icon.swift <out.icns>
 import CoreGraphics
 import Foundation
 import ImageIO
 import UniformTypeIdentifiers
 
-let args = CommandLine.arguments
-guard args.count == 3,
-      let src = CGImageSourceCreateWithURL(URL(fileURLWithPath: args[1]) as CFURL, nil),
-      let sheet = CGImageSourceCreateImageAtIndex(src, 0, nil) else {
-    print("usage: make-icon.swift <liguori.png> <out.icns>"); exit(1)
+guard CommandLine.arguments.count == 2 else {
+    print("usage: make-icon.swift <out.icns>"); exit(1)
 }
 
-// Idle row, first frame (6×7 grid, see SpriteSheet.standard).
-let cellW = sheet.width / 6, cellH = sheet.height / 7
-let frame = sheet.cropping(to: CGRect(x: 0, y: cellH, width: cellW, height: cellH))!
+typealias RGB = (r: Int, g: Int, b: Int)
+let skyTop: RGB = (22, 34, 72), skyBottom: RGB = (58, 88, 140)
+let star: RGB = (200, 214, 240)
+let gold: RGB = (232, 193, 90)
+let farPeak: RGB = (28, 42, 80)
+let rockLit: RGB = (112, 128, 168), rockShade: RGB = (72, 88, 128)
+let snowLit: RGB = (243, 245, 250), snowShade: RGB = (196, 208, 230)
+let hills: RGB = (20, 32, 62)
 
-func render(size: Int) -> CGImage {
-    let s = CGFloat(size)
-    let ctx = CGContext(data: nil, width: size, height: size, bitsPerComponent: 8, bytesPerRow: 0,
-                        space: CGColorSpace(name: CGColorSpace.sRGB)!,
-                        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
-    ctx.interpolationQuality = .high
+let grid = 32
 
+/// Colour of grid cell (x, y), y growing downward.
+func cell(_ x: Int, _ y: Int) -> RGB {
+    let fx = Double(x) + 0.5, fy = Double(y) + 0.5
+
+    // Foreground hills.
+    if fy > 27 + 1.2 * sin(fx / 3.2) { return hills }
+
+    // Main peak: apex at (16, 9), slope 1; lit on the left, shaded on the right.
+    let apexX = 16.0, apexY = 9.0
+    let half = fy - apexY
+    if half >= 0 && abs(fx - apexX) <= half + 0.5 {
+        let lit = fx <= apexX
+        let snowLine = apexY + 5 + (x % 3 == 0 ? 1 : 0) + (x % 5 == 1 ? -1 : 0)  // jagged edge
+        if fy < snowLine { return lit ? snowLit : snowShade }
+        return lit ? rockLit : rockShade
+    }
+
+    // Flanking peaks behind.
+    if fy > 15 + abs(fx - 6) * 1.1 || fy > 14 + abs(fx - 27) * 1.0 { return farPeak }
+
+    // Halo over the summit.
+    let hx = (fx - 16) / 5.0, hy = (fy - 4.5) / 1.8
+    if abs(sqrt(hx * hx + hy * hy) - 1) < 0.22 { return gold }
+
+    // A few stars, then the sky gradient in coarse bands.
+    if [(4, 3), (26, 5), (9, 8), (29, 10), (22, 2), (2, 11)].contains(where: { $0 == (x, y) }) { return star }
+    let t = Double(y / 4) / Double(grid / 4)
+    return (skyTop.r + Int(Double(skyBottom.r - skyTop.r) * t),
+            skyTop.g + Int(Double(skyBottom.g - skyTop.g) * t),
+            skyTop.b + Int(Double(skyBottom.b - skyTop.b) * t))
+}
+
+func color(_ c: RGB) -> CGColor {
+    CGColor(red: CGFloat(c.r) / 255, green: CGFloat(c.g) / 255, blue: CGFloat(c.b) / 255, alpha: 1)
+}
+
+func context(_ size: Int) -> CGContext {
+    CGContext(data: nil, width: size, height: size, bitsPerComponent: 8, bytesPerRow: 0,
+              space: CGColorSpace(name: CGColorSpace.sRGB)!, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
+}
+
+func renderMaster() -> CGImage {
+    let s = 1024.0
+    let ctx = context(1024)
     // macOS icon grid: 824/1024 body, centered, corner radius ~185/1024.
     let inset = s * 100 / 1024
     let body = CGRect(x: inset, y: inset, width: s - 2 * inset, height: s - 2 * inset)
-    let radius = s * 185 / 1024
-    let squircle = CGPath(roundedRect: body, cornerWidth: radius, cornerHeight: radius, transform: nil)
+    let squircle = CGPath(roundedRect: body, cornerWidth: s * 185 / 1024, cornerHeight: s * 185 / 1024, transform: nil)
 
-    // Drop shadow under the body.
     ctx.saveGState()
-    ctx.setShadow(offset: CGSize(width: 0, height: -s * 0.012), blur: s * 0.03,
-                  color: CGColor(gray: 0, alpha: 0.35))
-    ctx.addPath(squircle); ctx.setFillColor(CGColor(red: 0.07, green: 0.10, blue: 0.22, alpha: 1)); ctx.fillPath()
+    ctx.setShadow(offset: CGSize(width: 0, height: -s * 0.012), blur: s * 0.03, color: CGColor(gray: 0, alpha: 0.35))
+    ctx.addPath(squircle); ctx.setFillColor(color(hills)); ctx.fillPath()
     ctx.restoreGState()
 
     ctx.saveGState()
     ctx.addPath(squircle); ctx.clip()
-
-    // Midnight-blue vertical gradient (contrasts with his burgundy cape and gold halo).
-    let bg = CGGradient(colorsSpace: CGColorSpace(name: CGColorSpace.sRGB)!, colors: [
-        CGColor(red: 0.17, green: 0.25, blue: 0.47, alpha: 1),
-        CGColor(red: 0.06, green: 0.09, blue: 0.21, alpha: 1),
-    ] as CFArray, locations: [0, 1])!
-    ctx.drawLinearGradient(bg, start: CGPoint(x: 0, y: body.maxY), end: CGPoint(x: 0, y: body.minY), options: [])
-
-    // Golden glow behind the head.
-    let glowCenter = CGPoint(x: s / 2, y: body.minY + body.height * 0.66)
-    let glow = CGGradient(colorsSpace: CGColorSpace(name: CGColorSpace.sRGB)!, colors: [
-        CGColor(red: 1.0, green: 0.84, blue: 0.45, alpha: 0.55),
-        CGColor(red: 1.0, green: 0.78, blue: 0.35, alpha: 0.0),
-    ] as CFArray, locations: [0, 1])!
-    ctx.drawRadialGradient(glow, startCenter: glowCenter, startRadius: 0, endCenter: glowCenter,
-                           endRadius: body.width * 0.48, options: [])
-
-    // The bishop, scaled so his head and shoulders fill the frame; feet run off the bottom edge.
-    let figureH = body.height * 1.18
-    let figureW = figureH * CGFloat(cellW) / CGFloat(cellH)
-    let figure = CGRect(x: (s - figureW) / 2 + body.width * 0.02, y: body.minY - figureH * 0.24,
-                        width: figureW, height: figureH)
-    ctx.setShadow(offset: .zero, blur: s * 0.02, color: CGColor(gray: 0, alpha: 0.4))
-    ctx.draw(frame, in: figure)
+    let step = body.width / Double(grid)
+    for y in 0..<grid {
+        for x in 0..<grid {
+            // Round cell edges so neighbouring blocks share exact boundaries (no seams).
+            let x0 = (body.minX + Double(x) * step).rounded(), x1 = (body.minX + Double(x + 1) * step).rounded()
+            let top = (body.maxY - Double(y) * step).rounded(), bottom = (body.maxY - Double(y + 1) * step).rounded()
+            ctx.setFillColor(color(cell(x, y)))
+            ctx.fill(CGRect(x: x0, y: bottom, width: x1 - x0, height: top - bottom))
+        }
+    }
     ctx.restoreGState()
 
-    // Subtle inner rim.
     ctx.addPath(squircle)
     ctx.setStrokeColor(CGColor(red: 1, green: 0.85, blue: 0.55, alpha: 0.25))
-    ctx.setLineWidth(max(1, s * 0.006))
+    ctx.setLineWidth(s * 0.006)
     ctx.strokePath()
     return ctx.makeImage()!
 }
 
-let out = URL(fileURLWithPath: args[2])
+let master = renderMaster()
+func render(size: Int) -> CGImage {
+    if size == 1024 { return master }
+    let ctx = context(size)
+    ctx.interpolationQuality = .high
+    ctx.draw(master, in: CGRect(x: 0, y: 0, width: size, height: size))
+    return ctx.makeImage()!
+}
+
+let out = URL(fileURLWithPath: CommandLine.arguments[1])
 let iconset = out.deletingPathExtension().appendingPathExtension("iconset")
 try? FileManager.default.removeItem(at: iconset)
 try! FileManager.default.createDirectory(at: iconset, withIntermediateDirectories: true)

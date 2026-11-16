@@ -7,7 +7,12 @@ final class ActivityMonitor: ObservableObject {
     private var timer: Timer?
     private let interval: TimeInterval = 2.0
 
-    @Published var debugStatus: String = "starting…"
+    /// True only when the frontmost browser can't be read without Accessibility (no AppleScript
+    /// support, e.g. Firefox) and that permission isn't granted. Chrome, Safari etc. use Automation.
+    @Published private(set) var needsAccessibility = false
+    private var status = "" {
+        didSet { if status != oldValue { Log.monitor.debug("\(self.status, privacy: .public)") } }
+    }
     private var lastTickDate: Date?
     private let maxTickGap: TimeInterval = 10  // cap single tick contribution
     // Time doesn't count while the Mac is asleep, the screen is locked, or the user switched away.
@@ -41,29 +46,31 @@ final class ActivityMonitor: ObservableObject {
         let now = Date()
         let elapsed = lastTickDate.map { min(now.timeIntervalSince($0), maxTickGap) } ?? interval
         lastTickDate = now
-        debugStatus = "tracking: \(host)"
+        status = "tracking: \(host)"
         usageTracker.record(host: host, elapsed: elapsed, now: now)
     }
 
     private func currentHost() -> String? {
         if let reason = pauseReasons.sorted().first {
-            debugStatus = "paused (\(reason))"
+            status = "paused (\(reason))"
             return nil
         }
         guard let frontApp = NSWorkspace.shared.frontmostApplication else {
-            debugStatus = "no frontmost app"
+            status = "no frontmost app"
             return nil
         }
         guard let bundleID = frontApp.bundleIdentifier else {
-            debugStatus = "no bundle ID"
+            status = "no bundle ID"
             return nil
         }
         guard let browser = Browser(rawValue: bundleID) else {
-            debugStatus = "not a browser: \(bundleID)"
+            status = "not a browser: \(bundleID)"
             return nil
         }
-        guard let host = BrowserURLParser.extractHost(appPID: frontApp.processIdentifier, browser: browser) else {
-            debugStatus = "no URL from \(browser.displayName) — check Automation permission"
+        let host = BrowserURLParser.extractHost(appPID: frontApp.processIdentifier, browser: browser)
+        needsAccessibility = host == nil && browser.appleScriptName == nil && !AccessibilityPermission.isGranted
+        guard let host else {
+            status = "no URL from \(browser.displayName) — check \(browser.appleScriptName == nil ? "Accessibility" : "Automation") permission"
             return nil
         }
         return host
