@@ -9,7 +9,7 @@
 
   const Z = 2147483647;
   const SPRITE_HEIGHT = 150;
-  const REST_X = 24, BOTTOM = 8;
+  const REST_X = 0, BOTTOM = 8;  // his frame has ~22px of transparent margin, so the figure stands ~22px in
   const WALK_MS = 1600, IDLE_MS = 600, SPEAK_BEFORE_SWEEP_MS = 1500, AUTO_DISMISS_MS = 45000;
 
   const STYLE = `

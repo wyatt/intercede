@@ -196,4 +196,4 @@ Everything runs in the extension:
 | Dissolve | `src/dissolve.js` | Unchanged from phase 1. |
 | UI | `popup.html`, `options.html` | Today's usage + Test Nudge; sites (typed limits) + patron picker. Settings in `storage.sync`, usage in `storage.local` (`usage:YYYY-MM-DD`). |
 
-Checked in headless Chrome: with a 3-second budget on a local page, real tracking credited the time and triggered the nudge on its own; the patron walked in (sprite x −136 → 24 px over 1.6 s), the page's video paused at the raised hand, the dissolve ran on the sweep, and no console errors.
+Checked in headless Chrome: with a 3-second budget on a local page, real tracking credited the time and triggered the nudge on its own; the patron walked in (sprite x −136 → 0 px over 1.6 s), the page's video paused at the raised hand, the dissolve ran on the sweep, and no console errors.
