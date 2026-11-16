@@ -98,10 +98,6 @@ async function nudge(tabId, host) {
       target: { tabId },
       args: [{
         sheetUrl: chrome.runtime.getURL(`patrons/${patron.sheet}.png`),
-        fontUrls: {
-          'Intercede Pixel': chrome.runtime.getURL('fonts/Silkscreen-Bold.ttf'),
-          'Intercede Read': chrome.runtime.getURL('fonts/PixelifySans.ttf'),
-        },
         layout: LAYOUT,
         name: patron.name,
         catchphrase: patron.catchphrase,

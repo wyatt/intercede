@@ -37,8 +37,7 @@
   "web_accessible_resources": [
     {
       "resources": [
-        "patrons/*.png",
-        "fonts/*.ttf"
+        "patrons/*.png"
       ],
       "matches": [
         "<all_urls>"

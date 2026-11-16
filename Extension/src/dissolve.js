@@ -29,7 +29,7 @@
     canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; }
     .veil {
       background: ${VEIL}; display: flex; align-items: center; justify-content: center;
-      font: 16px/1.45 -apple-system, system-ui, "Helvetica Neue", sans-serif; color: #3B2A1A;
+      font: 500 15px/1.45 ui-monospace, "SF Mono", Menlo, Consolas, monospace; color: #3B2A1A;
     }
     .card { max-width: 30em; padding: 2em; text-align: center; opacity: 0; transform: translateY(6px);
             transition: opacity 500ms ease, transform 500ms ease; }

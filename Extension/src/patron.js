@@ -3,7 +3,7 @@
 // Same beats and timings as the Mac app's NudgeScene.
 //
 // Injected on demand by the background worker after dissolve.js:
-//   IntercedePatron.present({ sheetUrl, fontUrls, layout, name, catchphrase, phrase })
+//   IntercedePatron.present({ sheetUrl, layout, name, catchphrase, phrase })
 (() => {
   if (globalThis.IntercedePatron) return;
 
@@ -23,19 +23,17 @@
       position: absolute; bottom: ${BOTTOM + SPRITE_HEIGHT + 4}px; max-width: 340px; box-sizing: border-box;
       padding: 8px 12px; background: #fff; color: #000; border: 2px solid #000; border-radius: 8px;
       box-shadow: 2px 2px 4px rgba(0,0,0,.2); pointer-events: auto; cursor: pointer;
-      font: 14px/1.3 "Intercede Read", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-      -webkit-font-smoothing: none;
+      font: 500 12px/1.4 ui-monospace, "SF Mono", Menlo, Consolas, monospace;
       opacity: 0; transform: scale(.8); transform-origin: bottom left;
       transition: opacity 250ms ease, transform 250ms cubic-bezier(.3, 1.4, .5, 1);
     }
     .bubble.on { opacity: 1; transform: none; }
-    .bubble b { display: block; font: 13px/1.3 "Intercede Pixel", ui-monospace, Menlo, monospace; margin-bottom: 4px; }
+    .bubble b { display: block; font-size: 14px; font-weight: 700; margin-bottom: 4px; }
   `;
 
   let active = null;
 
   function present(options) {
-    loadFonts(options.fontUrls);
     active?.abort();
     active = new Scene(options);
     active.run();
@@ -198,20 +196,6 @@
     wait(ms) {
       const token = this.token = (this.token ?? 0) + 1;
       return new Promise(resolve => setTimeout(() => resolve(!this.cancelled && token === this.token), ms));
-    }
-  }
-
-  // The popup's pixel fonts, for the bubble. Fetched as data and added to the page's font set, so
-  // the page's CSP (font-src) can't block them; the bubble falls back to monospace meanwhile.
-  let fontsLoaded = false;
-  async function loadFonts(urls = {}) {
-    if (fontsLoaded) return;
-    fontsLoaded = true;
-    for (const [family, url] of Object.entries(urls)) {
-      try {
-        const face = new FontFace(family, await (await fetch(url)).arrayBuffer());
-        document.fonts.add(await face.load());
-      } catch { /* keep the fallback */ }
     }
   }
 
