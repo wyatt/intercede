@@ -71,30 +71,60 @@ let rows = frameCounts.count
 let cellW = Double(w) / Double(cols)
 let cellH = Double(h) / Double(rows)
 
+// Row boundaries: artists (and image generators) rarely space rows evenly, so cut each boundary
+// through the widest empty horizontal gap near where it nominally falls. Without a gap, use the even split.
+func rowIsEmpty(_ y: Int) -> Bool {
+    var x = 0
+    while x < w { if px[(y * w + x) * 4 + 3] >= edgeAlpha { return false }; x += 1 }
+    return true
+}
+var rowEdges = [0]
+for r in 1..<rows {
+    let nominal = Int((Double(r) * cellH).rounded())
+    let window = Int(cellH * 0.3)
+    var best: (start: Int, length: Int)? = nil
+    var y = max(nominal - window, 1)
+    while y < min(nominal + window, h - 1) {
+        guard rowIsEmpty(y) else { y += 1; continue }
+        var end = y
+        while end + 1 < h && rowIsEmpty(end + 1) { end += 1 }
+        let length = end - y + 1
+        if best == nil || length > best!.length { best = (y, length) }
+        y = end + 1
+    }
+    rowEdges.append(best.map { $0.start + $0.length / 2 } ?? nominal)
+}
+rowEdges.append(h)
+
 var out = [UInt8](repeating: 0, count: outW * cols * outH * rows * 4)
 let outStride = outW * cols * 4
 
-// Small specks that belong to a neighbouring frame (e.g. sparkles spilling across the line) are
-// excluded from this frame's bounds and not copied into it. A speck is a neighbour's if it touches
-// the cell border, or sits wholly beside this frame's main figure and nearer the border than the
-// figure. Halos are kept: they sit above the figure, not beside it.
+// Pieces of neighbouring frames (sparkles spilling across the line, a halo poking up from the row
+// below) are excluded from this frame's bounds and not copied into it. A piece is a neighbour's if
+// it touches a side border, touches the bottom border below the figure's feet, or is a small speck
+// wholly beside the figure and nearer the border than the figure. Nothing touching the top border is
+// removed, since that's where this frame's own halo can sit.
 func strayEdgeSpecks(x0: Int, x1: Int, y0: Int, y1: Int) -> Set<Int> {
-    let maxSpeck = 300  // px; a figure is thousands
+    let maxSpeck = 300          // px, for specks beside the figure (sparkles)
+    let maxBorderFragment = 1500  // px, for pieces touching the border (e.g. a neighbour's halo); a figure is many thousands
     let edgeMargin = 4  // px from the border that still counts as touching it
-    struct Component { var pixels: [Int]; var minX: Int; var maxX: Int; var touchesBorder: Bool }
+    struct Component {
+        var pixels: [Int]; var minX: Int; var maxX: Int; var minY: Int; var maxY: Int
+        var touchesSide = false, touchesBottom = false
+    }
     var visited = Set<Int>(), components: [Component] = []
     for y in y0..<y1 { for x in x0..<x1 {
         let start = y * w + x
         guard px[start * 4 + 3] >= noiseAlpha, !visited.contains(start) else { continue }
-        var comp = Component(pixels: [start], minX: x, maxX: x, touchesBorder: false)
+        var comp = Component(pixels: [start], minX: x, maxX: x, minY: y, maxY: y)
         var stack = [start]
         visited.insert(start)
         while let p = stack.popLast() {
             let cx = p % w, cy = p / w
             comp.minX = min(comp.minX, cx); comp.maxX = max(comp.maxX, cx)
-            if cx < x0 + edgeMargin || cx >= x1 - edgeMargin || cy < y0 + edgeMargin || cy >= y1 - edgeMargin {
-                comp.touchesBorder = true
-            }
+            comp.minY = min(comp.minY, cy); comp.maxY = max(comp.maxY, cy)
+            if cx < x0 + edgeMargin || cx >= x1 - edgeMargin { comp.touchesSide = true }
+            if cy >= y1 - edgeMargin { comp.touchesBottom = true }
             for (nx, ny) in [(cx + 1, cy), (cx - 1, cy), (cx, cy + 1), (cx, cy - 1)]
             where nx >= x0 && nx < x1 && ny >= y0 && ny < y1 {
                 let n = ny * w + nx
@@ -107,12 +137,16 @@ func strayEdgeSpecks(x0: Int, x1: Int, y0: Int, y1: Int) -> Set<Int> {
     } }
     guard let main = components.max(by: { $0.pixels.count < $1.pixels.count }) else { return [] }
     var stray = Set<Int>()
-    for comp in components where comp.pixels.count <= maxSpeck {
-        var isStray = comp.touchesBorder
-        if comp.maxX < main.minX {         // wholly left of the figure
-            isStray = isStray || (comp.minX - x0) < (main.minX - comp.maxX)
-        } else if comp.minX > main.maxX {  // wholly right of the figure
-            isStray = isStray || (x1 - 1 - comp.maxX) < (comp.minX - main.maxX)
+    for comp in components where comp.pixels.count <= maxBorderFragment && comp.pixels.count != main.pixels.count {
+        // Side border: spill from the frame beside. Bottom border and wholly below the feet: the next
+        // row's halo. The top border is left alone — that's where this frame's own halo lives.
+        var isStray = comp.touchesSide || (comp.touchesBottom && comp.minY > main.maxY)
+        if comp.pixels.count <= maxSpeck {
+            if comp.maxX < main.minX {         // wholly left of the figure
+                isStray = isStray || (comp.minX - x0) < (main.minX - comp.maxX)
+            } else if comp.minX > main.maxX {  // wholly right of the figure
+                isStray = isStray || (x1 - 1 - comp.maxX) < (comp.minX - main.maxX)
+            }
         }
         if isStray { stray.formUnion(comp.pixels) }
     }
@@ -122,7 +156,7 @@ func strayEdgeSpecks(x0: Int, x1: Int, y0: Int, y1: Int) -> Set<Int> {
 for (r, count) in frameCounts.enumerated() {
     for c in 0..<count {
         let x0 = Int((Double(c) * cellW).rounded()), x1 = min(Int((Double(c + 1) * cellW).rounded()), w)
-        let y0 = Int((Double(r) * cellH).rounded()), y1 = min(Int((Double(r + 1) * cellH).rounded()), h)
+        let y0 = rowEdges[r], y1 = rowEdges[r + 1]
         let stray = strayEdgeSpecks(x0: x0, x1: x1, y0: y0, y1: y1)
         var minX = Int.max, maxX = -1, minY = Int.max, maxY = -1
         for y in y0..<y1 { for x in x0..<x1 where px[(y * w + x) * 4 + 3] >= edgeAlpha && !stray.contains(y * w + x) {

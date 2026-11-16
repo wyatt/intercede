@@ -38,6 +38,8 @@ sprites:
 	@for src in Art/*-source.png; do \
 		name=$$(basename "$$src" -source.png); \
 		swift tools/pack-sprite.swift "$$src" "Intercede/Resources/Patrons/$$name.png" 6,4,6,6,6,4,6 | tail -1; \
+		grep -q "sheetName: \"$$name\"" Intercede/Patrons/Patron.swift || \
+			echo "warning: no patron uses '$$name' (sheetName in Intercede/Patrons/Patron.swift) — misspelled file name?"; \
 	done
 
 # Rebuild the app icon from the bishop sprite
