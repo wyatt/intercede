@@ -180,10 +180,10 @@ struct SpeechBubble: View {
         VStack(alignment: .leading, spacing: 4) {
             if let headline {
                 Text(headline)
-                    .font(.system(size: 14, weight: .bold))
+                    .font(.system(size: 14, weight: .bold, design: .monospaced))
             }
             Text(text)
-                .font(.system(size: headline == nil ? 13 : 12, weight: .medium))
+                .font(.system(size: headline == nil ? 13 : 12, weight: .medium, design: .monospaced))
         }
         .foregroundColor(.black)
         .padding(.horizontal, 12)
