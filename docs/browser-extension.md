@@ -110,7 +110,7 @@ Injected on demand with `chrome.scripting.executeScript`, so it never runs on pa
    - The snapshot is cut into **8×8 px tiles**, each with a random threshold biased by distance from the bottom-left (where the patron stands), so the dissolve sweeps away from his hand.
    - Tiles past their threshold drift up and fade. A few become **gold** (`#E8C15A`, matching his halo) and twinkle for ~300 ms: the "tiny golden pixels".
    - Duration ≈ the `dismiss` clip plus `settle` (~1.2 s), so the page is gone as he lowers his hand.
-4. **Veil (D1a):** a calm parchment-coloured layer with the patron's catchphrase and phrase, plus a **Return anyway** button. That button removes the veil and sends `returnAnyway`; the app can log the override and start the normal 5-minute cooldown.
+4. **Veil (D1a):** a calm parchment-coloured layer with the patron's catchphrase and phrase, plus a **Return anyway** button. The button stays locked for `returnDelayS` (default 10 s), counting down on its label; time spent with the tab hidden doesn't count. Once unlocked, it removes the veil and sends `returnAnyway`; the app can log the override and start the normal 5-minute cooldown.
 
 **Fallbacks:** if `captureVisibleTab` fails (some restricted pages, or a capture rate limit), `dissolve()` runs in **cover** mode: the same tile sweep, but veil-coloured tiles settle *over* the live page instead of page tiles drifting away. With `prefers-reduced-motion`, skip the particles and do a 300 ms fade.
 

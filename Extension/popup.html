@@ -5,31 +5,34 @@
 <title>Intercede</title>
 <link rel="stylesheet" href="src/ui.css">
 <style>
-  body { width: 290px; }
-  header { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--panel); }
-  h1 { font-size: 14px; margin: 0; letter-spacing: .02em; }
-  .icon-button { border: none; background: none; padding: 2px; color: var(--muted); display: flex; }
-  .icon-button:hover { color: var(--text); }
-  main { padding: 14px 14px 4px; max-height: 340px; overflow-y: auto; }
-  h2 { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 10px; }
-  footer { display: flex; justify-content: space-between; align-items: center; padding: 8px 14px 12px; border-top: 1px solid var(--line); }
-  .patron { font-size: 12px; }
+  body { width: 300px; padding: 10px 10px 12px; }
+  header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  h1 { font-size: 16px; margin: 0; letter-spacing: .04em; }
+  .icon-button { background: none; border: none; box-shadow: none; padding: 2px; color: var(--muted); display: flex; }
+  .icon-button:hover { color: var(--text); filter: none; }
+  .icon-button:active { transform: translate(1px, 1px); }
+  main { padding: 12px 12px 0; max-height: 320px; overflow-y: auto; }
+  h2 { font-size: 10px; color: var(--muted); margin: 0 0 10px; letter-spacing: .08em; }
+  footer { display: flex; align-items: flex-end; gap: 8px; margin-top: 14px; }
+  .sprite { flex: none; width: 41px; height: 48px; }
+  .patron { flex: 1; font-size: 13px; padding-bottom: 6px; }
 </style>
 </head>
 <body>
 <header>
   <h1>Intercede</h1>
   <button class="icon-button" id="settings" title="Settings" aria-label="Settings">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.4 13a7.6 7.6 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.4 7.4 0 0 0-1.7-1L15 3.3h-4l-.4 2.6a7.4 7.4 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.6 7.6 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1c.5.4 1.1.7 1.7 1l.4 2.6h4l.4-2.6c.6-.3 1.2-.6 1.7-1l2.5 1 2-3.5zM12 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"/></svg>
+    <svg width="20" height="20" viewBox="0 0 10 10" fill="currentColor" shape-rendering="crispEdges" aria-hidden="true"><path d="M4 0h2v1h-2zM1 1h2v1h-2zM4 1h2v1h-2zM7 1h2v1h-2zM1 2h8v1h-8zM2 3h2v1h-2zM6 3h2v1h-2zM0 4h3v1h-3zM7 4h3v1h-3zM0 5h3v1h-3zM7 5h3v1h-3zM2 6h2v1h-2zM6 6h2v1h-2zM1 7h8v1h-8zM1 8h2v1h-2zM4 8h2v1h-2zM7 8h2v1h-2zM4 9h2v1h-2z"/></svg>
   </button>
 </header>
-<main>
+<main class="frame">
   <h2>Today</h2>
   <div id="stats"></div>
 </main>
 <footer>
-  <span class="patron muted" id="patron"></span>
-  <button id="test">Test Nudge</button>
+  <div class="sprite" id="sprite" role="img"></div>
+  <span class="patron" id="patron"></span>
+  <button id="test">Test nudge</button>
 </footer>
 <script type="module" src="src/popup.js"></script>
 </body>

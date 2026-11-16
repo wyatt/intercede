@@ -16,6 +16,7 @@
     tileSize: 8,          // CSS px
     goldFraction: 0.05,   // share of tiles that become golden sparkles
     tileLife: 0.35,       // fraction of the duration each tile spends drifting away
+    returnDelayS: 10,     // "Return anyway" stays locked this long (counted only while the tab is visible)
   };
   const GOLD = '#E8C15A';
   const VEIL = '#F4ECD8';
@@ -42,6 +43,12 @@
       border: 2px solid #3B2A1A; border-radius: 6px; padding: 0.45em 1.1em;
     }
     button:hover { background: ${GOLD}; }
+    button { position: relative; overflow: hidden; font-variant-numeric: tabular-nums; }
+    button .fill { position: absolute; inset: 0 auto 0 0; width: 0; background: ${GOLD}; opacity: .45;
+                   transition: width 1s steps(4); }
+    button .label { position: relative; }
+    button[aria-disabled="true"] { cursor: default; color: #8A6A3A; border-color: #8A6A3A; }
+    button[aria-disabled="true"]:hover { background: transparent; }
     button:focus-visible { outline: 3px solid ${GOLD}; outline-offset: 2px; }
   `;
 
@@ -49,6 +56,7 @@
   let state = 'idle';          // idle | held | dissolving | veiled
   let frame = 0;
   let finish = null;           // resolves the in-flight dissolve() promise
+  let countdown = 0;           // interval locking the "Return anyway" button
 
   function ensureHost() {
     if (host) return;
@@ -97,12 +105,14 @@
     veil.layer.style.opacity = '1';
     veil.card.classList.add('on');
     veil.button.focus({ preventScroll: true });
+    lockReturn(veil.button, opts.returnDelayS);
     state = 'veiled';
     return { ok: true, mode: snapshot ? 'scatter' : 'cover', reduced };
   }
 
   function release() {
     cancelAnimationFrame(frame);
+    clearInterval(countdown); countdown = 0;
     finish?.(); finish = null;
     host?.remove();
     host = root = dim = null;
@@ -248,14 +258,38 @@
     if (opts.catchphrase) card.append(el('p', 'catchphrase', opts.catchphrase));
     if (opts.phrase) card.append(el('p', 'phrase', opts.phrase));
     if (opts.patronName) card.append(el('p', 'patron', opts.patronName));
-    const button = el('button', '', 'Return anyway');
+    const button = el('button');
+    button.append(el('span', 'fill'), el('span', 'label', 'Return anyway'));
     button.addEventListener('click', () => {
+      if (button.getAttribute('aria-disabled') === 'true') return;
       release();
       opts.onReturn?.();
     });
     card.append(button);
     layer.append(card);
     return { layer, card, button };
+  }
+
+  // Keeps the button locked for `seconds`, counting down on it; time in a hidden tab doesn't count.
+  function lockReturn(button, seconds) {
+    if (!(seconds > 0)) return;
+    const total = Math.ceil(seconds);
+    let left = total;
+    const label = button.querySelector('.label'), fill = button.querySelector('.fill');
+    const show = () => {
+      label.textContent = `Return anyway in ${left}`;
+      fill.style.width = `${((total - left) / total) * 100}%`;
+    };
+    button.setAttribute('aria-disabled', 'true');
+    show();
+    countdown = setInterval(() => {
+      if (document.hidden) return;
+      if (--left > 0) return show();
+      clearInterval(countdown); countdown = 0;
+      button.removeAttribute('aria-disabled');
+      fill.remove();
+      label.textContent = 'Return anyway';
+    }, 1000);
   }
 
   function canvas(W, H, dpr) {
