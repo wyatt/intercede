@@ -1,7 +1,7 @@
 // Builds the app icon from the bishop's idle frame: a midnight-blue squircle with a soft golden
 // halo glow behind him. Writes an .iconset and converts it to .icns with iconutil.
 //
-// usage: swift tools/make-icon.swift <bishop.png> <out.icns>
+// usage: swift tools/make-icon.swift <liguori.png> <out.icns>
 import AppKit
 import CoreGraphics
 import Foundation
@@ -12,11 +12,11 @@ let args = CommandLine.arguments
 guard args.count == 3,
       let src = CGImageSourceCreateWithURL(URL(fileURLWithPath: args[1]) as CFURL, nil),
       let sheet = CGImageSourceCreateImageAtIndex(src, 0, nil) else {
-    print("usage: make-icon.swift <bishop.png> <out.icns>"); exit(1)
+    print("usage: make-icon.swift <liguori.png> <out.icns>"); exit(1)
 }
 
-// Idle row, first frame (176×200 cells, see SpriteSheet.bishop).
-let cellW = 176, cellH = 200
+// Idle row, first frame (6×7 grid, see SpriteSheet.focusPet).
+let cellW = sheet.width / 6, cellH = sheet.height / 7
 let frame = sheet.cropping(to: CGRect(x: 0, y: cellH, width: cellW, height: cellH))!
 
 func render(size: Int) -> CGImage {

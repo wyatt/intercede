@@ -42,7 +42,7 @@ sprites:
 
 # Rebuild the app icon from the bishop sprite
 icon:
-	swift tools/make-icon.swift FocusPet/Resources/Pets/bishop.png FocusPet/Resources/AppIcon.icns
+	swift tools/make-icon.swift FocusPet/Resources/Pets/liguori.png FocusPet/Resources/AppIcon.icns
 
 reset-tcc:
 	tccutil reset Accessibility $(BUNDLE_ID)

@@ -16,7 +16,7 @@ mkdir -p "$OUT/Contents/MacOS" "$OUT/Contents/Resources" "$OUT/Contents/Helpers"
 
 cp FocusPet/Resources/Info.plist "$OUT/Contents/Info.plist"
 plutil -insert CFBundleExecutable -string FocusPet "$OUT/Contents/Info.plist"
-cp FocusPet/Resources/Pets/bishop.png FocusPet/Resources/AppIcon.icns "$OUT/Contents/Resources/"
+cp FocusPet/Resources/Pets/*.png FocusPet/Resources/AppIcon.icns "$OUT/Contents/Resources/"
 
 # Inside-out: sign the helper before the bundle that contains it.
 codesign --force --sign - --options runtime "$OUT/Contents/Helpers/FocusPetBridge"

@@ -169,24 +169,25 @@ final class SpriteSheetTests: XCTestCase {
         XCTAssertEqual(clip.frameIndex(elapsed: -1), 0)
     }
 
-    func testBundledBishopLoadsWithAllAnimations() throws {
-        let sheet = try XCTUnwrap(SpriteSheet.bishop, "bishop.png missing from app bundle or malformed")
-        XCTAssertEqual(sheet.frameSize, CGSize(width: 176, height: 200))
-        for animation in PetAnimation.allCases {
-            let clip = sheet.clip(animation)
-            for i in 0..<clip.frames {
-                XCTAssertNotNil(sheet.frame(animation, elapsed: Double(i) / clip.fps))
-            }
+    func testEverySaintHasBundledArtInTheStandardLayout() throws {
+        for pet in Pet.roster {
+            let sheet = try XCTUnwrap(SpriteSheet.bundled(pet.sheetName), "\(pet.sheetName).png missing from app bundle or malformed")
+            XCTAssertEqual(sheet.frameSize, CGSize(width: 176, height: 208), pet.name)
         }
     }
 
-    func testBishopFramesAreNotBlank() throws {
-        // Guards against a mis-specified frame count pointing at an empty grid cell.
-        let sheet = try XCTUnwrap(SpriteSheet.bishop)
-        for animation in PetAnimation.allCases {
-            let clip = sheet.clip(animation)
-            let last = sheet.frame(animation, elapsed: Double(clip.frames - 1) / clip.fps + 0.001)
-            XCTAssertGreaterThan(opaquePixelCount(last), 1000, "\(animation) last frame is blank")
+    func testEverySaintsFramesAreNotBlank() throws {
+        // Every frame of every clip has a figure in it — guards against a wrong frame count pointing
+        // at an empty cell, or background removal eating a figure.
+        for pet in Pet.roster {
+            let sheet = try XCTUnwrap(SpriteSheet.bundled(pet.sheetName))
+            for animation in PetAnimation.allCases {
+                let clip = sheet.clip(animation)
+                for i in 0..<clip.frames {
+                    let frame = sheet.frame(animation, elapsed: (Double(i) + 0.5) / clip.fps)
+                    XCTAssertGreaterThan(opaquePixelCount(frame), 1000, "\(pet.name) \(animation) frame \(i) is blank")
+                }
+            }
         }
     }
 
@@ -249,7 +250,7 @@ final class PetTests: XCTestCase {
 @MainActor
 final class NudgeSceneTests: XCTestCase {
     func testHitAreaFollowsSpriteNotLayoutOrigin() {
-        let scene = NudgeScene(message: "hi", sheet: SpriteSheet.bishop)
+        let scene = NudgeScene(message: "hi", sheet: SpriteSheet.liguori)
         // Starts offstage to the left: the window's bottom-left corner must not be clickable.
         XCTAssertEqual(scene.hitRects.count, 1)
         XCTAssertFalse(scene.hitRects.contains { $0.contains(CGPoint(x: 40, y: 40)) })
@@ -258,7 +259,7 @@ final class NudgeSceneTests: XCTestCase {
     }
 
     func testSweepsThePageWithoutBeingTapped() async throws {
-        let scene = NudgeScene(message: "hi", sheet: SpriteSheet.bishop)
+        let scene = NudgeScene(message: "hi", sheet: SpriteSheet.liguori)
         var phases: [PetAnimation] = []
         scene.onPhase = { phases.append($0) }
         var finished = false
@@ -271,7 +272,7 @@ final class NudgeSceneTests: XCTestCase {
     }
 
     func testNothingClickableOnceExiting() {
-        let scene = NudgeScene(message: "hi", sheet: SpriteSheet.bishop)
+        let scene = NudgeScene(message: "hi", sheet: SpriteSheet.liguori)
         scene.exit()
         XCTAssertTrue(scene.hitRects.isEmpty)
     }
@@ -284,7 +285,7 @@ final class PetLibraryTests: XCTestCase {
         let library = PetLibrary(defaults: UserDefaults(suiteName: suite)!)
         XCTAssertEqual(library.selectedPetSlug, Pet.stAlphonsus.slug)
         XCTAssertEqual(library.current.pet.catchphrase, "This is not Liguorian!")
-        XCTAssertTrue(library.current.sheet === SpriteSheet.bishop)
+        XCTAssertTrue(library.current.sheet === SpriteSheet.liguori)
         UserDefaults().removePersistentDomain(forName: suite)
     }
 

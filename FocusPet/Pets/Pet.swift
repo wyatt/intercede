@@ -22,7 +22,7 @@ struct Pet: Identifiable {
 
 extension Pet {
     static let stAlphonsus = Pet(
-        slug: "bishop",
+        slug: "liguori",
         name: "St. Alphonsus Liguori",
         catchphrase: "This is not Liguorian!",
         phrases: [
@@ -39,7 +39,7 @@ extension Pet {
             "I lived to ninety without %@. You'll survive an afternoon.",
             "Time is precious. Spend it on what you'll be glad you did.",
         ],
-        sheetName: "bishop"
+        sheetName: "liguori"
     )
 
     static let isidore = Pet(

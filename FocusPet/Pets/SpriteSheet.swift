@@ -61,7 +61,7 @@ final class SpriteSheet: @unchecked Sendable {  // immutable after init
 }
 
 extension SpriteSheet {
-    /// The FocusPet layout every companion uses: a 6×7 grid of 176×200 cells, one row per beat
+    /// The FocusPet layout every companion uses: a 6×7 grid of 176×208 cells, one row per beat
     /// (walk in, idle, raise hand, speak, dismiss, lower hand, walk out), packed by tools/pack-sprite.swift.
     static func focusPet(_ image: CGImage) -> SpriteSheet? {
         SpriteSheet(image: image, cols: 6, rows: 7, clips: [
@@ -78,7 +78,7 @@ extension SpriteSheet {
     /// The bundled sheet named `name` (`<name>.png`), or nil if that art isn't in the app yet.
     static func bundled(_ name: String) -> SpriteSheet? { bundledSheets[name] }
 
-    static var bishop: SpriteSheet? { bundled("bishop") }
+    static var liguori: SpriteSheet? { bundled("liguori") }
 
     // Loaded once for every pet in the roster; pets without art are simply absent.
     private static let bundledSheets: [String: SpriteSheet] = {

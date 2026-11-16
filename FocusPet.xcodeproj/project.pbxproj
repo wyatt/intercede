@@ -12,22 +12,25 @@
 		25D11733C832E56AAD66E484 /* MenuBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A54748DE048A6FF6DB61319 /* MenuBarController.swift */; };
 		2C0A6F736386603E83C5E93C /* UsageStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45C57E1494C9349EB61854CE /* UsageStore.swift */; };
 		2E8FF8AA08BBF1EC4B4EA688 /* StatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 034ACF06F3CAF2ED6CDF3184 /* StatsView.swift */; };
-		377B54A37C76DC280C911146 /* bishop.png in Resources */ = {isa = PBXBuildFile; fileRef = 12C8A4ABB38AC71557BF16E6 /* bishop.png */; };
+		2F3FADDED3FDF1966760D36D /* liguori.png in Resources */ = {isa = PBXBuildFile; fileRef = 9D554148B2B7F4E0FC6FF356 /* liguori.png */; };
+		3E9BA58A7C0FCA0E09631653 /* benedict.png in Resources */ = {isa = PBXBuildFile; fileRef = E5B6E4A7595A9E239011ABB0 /* benedict.png */; };
 		4674749149C07B330A7483C0 /* FocusPetBridge in Embed Dependencies */ = {isa = PBXBuildFile; fileRef = 6F658075137385529AC03411 /* FocusPetBridge */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		48B299226AB7FEE9A410E571 /* Pet.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBAABD2AB8C1F56A73C8B0C5 /* Pet.swift */; };
 		49A2737FDABDB78A51DABD3C /* SpriteSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7414061C6E5B91FAB6245CF /* SpriteSheet.swift */; };
-		63F4D8495002556FF82DB7F2 /* PetdexClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4199E3204D744B17671E528B /* PetdexClient.swift */; };
 		75A0A20B7DE43A26E8842D7A /* PetLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1F6732DBE6F43AC6535805 /* PetLibrary.swift */; };
 		7F48945E137C177D330862B9 /* BrowserURLParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A63ABCE6201F2C025A6D347 /* BrowserURLParser.swift */; };
+		819E9AB942BEA3B74134E122 /* clare.png in Resources */ = {isa = PBXBuildFile; fileRef = 35C7BEF78AB0159061B69326 /* clare.png */; };
 		A81CA6058510BD6F27F4CC0F /* SpriteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2D876C3E5EC3ECB81CC8546 /* SpriteView.swift */; };
 		AD348B974AF128B7D5A63646 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68E8078A24A567F9487F131C /* main.swift */; };
 		B29565FE986987CC19756FEF /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2564BE6EBADE154CD04CDE16 /* SettingsView.swift */; };
 		B826AEB7C90F8AFFE276CFAB /* FocusPetApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 367860D19928193642E31274 /* FocusPetApp.swift */; };
 		BD8CDD4FBB2E69C5C10AAA50 /* UsageTrackerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E87CE779A6DC3161BD295B5 /* UsageTrackerTests.swift */; };
 		BF27905899BD51EC8132C2A2 /* AppIcon.icns in Resources */ = {isa = PBXBuildFile; fileRef = BE63002D626DD210B4EAD814 /* AppIcon.icns */; };
+		C7438090B5AE258431611245 /* aquinas.png in Resources */ = {isa = PBXBuildFile; fileRef = 19FF4B861D7F435AE40B2A79 /* aquinas.png */; };
 		DE14DC04E020EAA17867C2BB /* NativeHostInstaller.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14B819B1D0013A418F13D257 /* NativeHostInstaller.swift */; };
 		DF0D535C64E5059DD118AD71 /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC4EE3EBF41AF9C284CDECBC /* Log.swift */; };
 		E16AF7AF9522D4A5359287B9 /* SpriteOverlayWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BF18573BDA11AAB03061026 /* SpriteOverlayWindow.swift */; };
+		E59E7E2C23756997C115B903 /* isidore.png in Resources */ = {isa = PBXBuildFile; fileRef = 52F18F42800D65D38EFE11EC /* isidore.png */; };
 		E6DEBFDF7E2E63EDD806C611 /* NudgeOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F6C530D95016F7AF39177A3 /* NudgeOverlayView.swift */; };
 		EFB6A8C8450E6EC41798C5EB /* BrowserBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 422DC8EE704C68307D50DF95 /* BrowserBridge.swift */; };
 		F44DD58782E9BFA0E3DB8A88 /* AccessibilityPermission.swift in Sources */ = {isa = PBXBuildFile; fileRef = 794C7F997ABA9654E006281B /* AccessibilityPermission.swift */; };
@@ -68,17 +71,18 @@
 /* Begin PBXFileReference section */
 		034ACF06F3CAF2ED6CDF3184 /* StatsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsView.swift; sourceTree = "<group>"; };
 		0F6C530D95016F7AF39177A3 /* NudgeOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NudgeOverlayView.swift; sourceTree = "<group>"; };
-		12C8A4ABB38AC71557BF16E6 /* bishop.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = bishop.png; sourceTree = "<group>"; };
 		14B819B1D0013A418F13D257 /* NativeHostInstaller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeHostInstaller.swift; sourceTree = "<group>"; };
+		19FF4B861D7F435AE40B2A79 /* aquinas.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = aquinas.png; sourceTree = "<group>"; };
 		1BF18573BDA11AAB03061026 /* SpriteOverlayWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpriteOverlayWindow.swift; sourceTree = "<group>"; };
 		20EA36B473DF5004A044EEB6 /* ActivityMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityMonitor.swift; sourceTree = "<group>"; };
 		2564BE6EBADE154CD04CDE16 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		2A54748DE048A6FF6DB61319 /* MenuBarController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarController.swift; sourceTree = "<group>"; };
 		2E0E1ADD425FAF6327798AF9 /* NudgeCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NudgeCoordinator.swift; sourceTree = "<group>"; };
+		35C7BEF78AB0159061B69326 /* clare.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = clare.png; sourceTree = "<group>"; };
 		367860D19928193642E31274 /* FocusPetApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusPetApp.swift; sourceTree = "<group>"; };
-		4199E3204D744B17671E528B /* PetdexClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetdexClient.swift; sourceTree = "<group>"; };
 		422DC8EE704C68307D50DF95 /* BrowserBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserBridge.swift; sourceTree = "<group>"; };
 		45C57E1494C9349EB61854CE /* UsageStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsageStore.swift; sourceTree = "<group>"; };
+		52F18F42800D65D38EFE11EC /* isidore.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = isidore.png; sourceTree = "<group>"; };
 		5963A07821D3580A87D1C2B7 /* FocusPet.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FocusPet.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		68E8078A24A567F9487F131C /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		6E3878FB6187C0E718736A8D /* FocusPet.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = FocusPet.entitlements; sourceTree = "<group>"; };
@@ -86,11 +90,13 @@
 		6F658075137385529AC03411 /* FocusPetBridge */ = {isa = PBXFileReference; includeInIndex = 0; path = FocusPetBridge; sourceTree = BUILT_PRODUCTS_DIR; };
 		794C7F997ABA9654E006281B /* AccessibilityPermission.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityPermission.swift; sourceTree = "<group>"; };
 		7A63ABCE6201F2C025A6D347 /* BrowserURLParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserURLParser.swift; sourceTree = "<group>"; };
+		9D554148B2B7F4E0FC6FF356 /* liguori.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = liguori.png; sourceTree = "<group>"; };
 		A1C7C2FA3025CD242411511A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		A95AB0DE5E5AD30593156547 /* FocusPetTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FocusPetTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA1F6732DBE6F43AC6535805 /* PetLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetLibrary.swift; sourceTree = "<group>"; };
 		BE63002D626DD210B4EAD814 /* AppIcon.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = AppIcon.icns; sourceTree = "<group>"; };
 		D2D876C3E5EC3ECB81CC8546 /* SpriteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpriteView.swift; sourceTree = "<group>"; };
+		E5B6E4A7595A9E239011ABB0 /* benedict.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = benedict.png; sourceTree = "<group>"; };
 		F7414061C6E5B91FAB6245CF /* SpriteSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpriteSheet.swift; sourceTree = "<group>"; };
 		FAB13CF8EC3A7F272D586DAA /* UsageTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsageTracker.swift; sourceTree = "<group>"; };
 		FBAABD2AB8C1F56A73C8B0C5 /* Pet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Pet.swift; sourceTree = "<group>"; };
@@ -221,7 +227,6 @@
 			isa = PBXGroup;
 			children = (
 				FBAABD2AB8C1F56A73C8B0C5 /* Pet.swift */,
-				4199E3204D744B17671E528B /* PetdexClient.swift */,
 				AA1F6732DBE6F43AC6535805 /* PetLibrary.swift */,
 				F7414061C6E5B91FAB6245CF /* SpriteSheet.swift */,
 			);
@@ -231,7 +236,11 @@
 		F04CAE447E49206F1660F78E /* Pets */ = {
 			isa = PBXGroup;
 			children = (
-				12C8A4ABB38AC71557BF16E6 /* bishop.png */,
+				19FF4B861D7F435AE40B2A79 /* aquinas.png */,
+				E5B6E4A7595A9E239011ABB0 /* benedict.png */,
+				35C7BEF78AB0159061B69326 /* clare.png */,
+				52F18F42800D65D38EFE11EC /* isidore.png */,
+				9D554148B2B7F4E0FC6FF356 /* liguori.png */,
 			);
 			path = Pets;
 			sourceTree = "<group>";
@@ -352,7 +361,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				BF27905899BD51EC8132C2A2 /* AppIcon.icns in Resources */,
-				377B54A37C76DC280C911146 /* bishop.png in Resources */,
+				C7438090B5AE258431611245 /* aquinas.png in Resources */,
+				3E9BA58A7C0FCA0E09631653 /* benedict.png in Resources */,
+				819E9AB942BEA3B74134E122 /* clare.png in Resources */,
+				E59E7E2C23756997C115B903 /* isidore.png in Resources */,
+				2F3FADDED3FDF1966760D36D /* liguori.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -383,7 +396,6 @@
 				E6DEBFDF7E2E63EDD806C611 /* NudgeOverlayView.swift in Sources */,
 				48B299226AB7FEE9A410E571 /* Pet.swift in Sources */,
 				75A0A20B7DE43A26E8842D7A /* PetLibrary.swift in Sources */,
-				63F4D8495002556FF82DB7F2 /* PetdexClient.swift in Sources */,
 				B29565FE986987CC19756FEF /* SettingsView.swift in Sources */,
 				E16AF7AF9522D4A5359287B9 /* SpriteOverlayWindow.swift in Sources */,
 				49A2737FDABDB78A51DABD3C /* SpriteSheet.swift in Sources */,

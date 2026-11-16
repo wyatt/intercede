@@ -24,7 +24,7 @@ When you spend too long on a tracked site (YouTube, Reddit, etc.), St. Alphonsus
 - **Bundled pet: St. Alphonsus Liguori** — 7-animation sprite sheet shipped in the app, so nudges never depend on the network; his catchphrase "This is not Liguorian!" heads every bubble
 - **Menu bar** — pixel-art icon, popover with live budget bars per site, debug status indicator
 - **Settings** — site list CRUD (accepts bare hosts or pasted URLs), per-site daily budget (stepper, minutes, saved immediately), pet picker with preview
-- **More saints** — St. Isidore of Seville ("Even the patron of the internet says log off!"), St. Clare of Assisi ("As patron of screens, I've seen enough."), St. Benedict ("Idleness is the enemy of the soul!"), and St. Thomas Aquinas ("I answer that: close the tab."). Their phrases are written; each appears in the picker once its sprite sheet is added
+- **More saints** — St. Isidore of Seville ("Even the patron of the internet says log off!"), St. Clare of Assisi ("As patron of screens, I've seen enough."), St. Benedict ("Idleness is the enemy of the soul!"), and St. Thomas Aquinas ("I answer that: close the tab."). Pick one in Settings → Pet
 - **Persistence** — daily usage stored as JSON in Application Support, survives restarts
 
 ---
@@ -89,15 +89,15 @@ FocusPet/
 ├── MenuBar/                # MenuBarController (NSStatusItem), StatsView
 ├── Settings/               # SettingsView (sites, budgets, pet)
 ├── Pets/                   # Pet (roster, names, phrases), SpriteSheet, PetLibrary
-├── Resources/Pets/         # bishop.png — packed sprite sheet bundled with the app
+├── Resources/Pets/         # <name>.png — packed sprite sheets bundled with the app (one per saint)
 └── Support/                # AccessibilityPermission, Log
-Art/                        # source art (bishop-source.png)
+Art/                        # source art (<name>-source.png per saint)
 tools/pack-sprite.swift     # repacks source art into the uniform grid the app slices
 ```
 
 ### Sprite sheets
 
-Sprites are described by `SpriteSheet`: a uniform grid plus a clip (row, frame count, fps, loop/one-shot) for each nudge beat — `walkIn`, `idle`, `alert`, `talk`, `dismiss`, `settle`, `walkOut`. The bishop is a 6×7 grid of 176×200 cells:
+Sprites are described by `SpriteSheet`: a uniform grid plus a clip (row, frame count, fps, loop/one-shot) for each nudge beat — `walkIn`, `idle`, `alert`, `talk`, `dismiss`, `settle`, `walkOut`. Every saint's sheet is a 6×7 grid of 176×208 cells:
 
 | Row | Clip | Frames | |
 |-----|------|--------|---|
