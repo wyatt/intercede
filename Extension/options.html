@@ -31,10 +31,17 @@
   .empty { padding: 14px 12px; border-bottom: 2px dashed var(--track); }
 
   /* Patron */
-  .patron-pick { display: flex; gap: 24px; align-items: center; padding: 16px; }
-  .preview { flex: none; width: 127px; height: 150px; }
-  .patron-pick select { width: 100%; margin-bottom: 12px; }
-  .catchphrase { font-size: 16px; margin: 0; }
+  .patrons { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 12px; padding: 12px; }
+  .patron-card {
+    display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 6px 8px;
+    background: none; border: 2px solid transparent; box-shadow: none; text-transform: none;
+    font-size: 12px; line-height: 1.25; text-align: center; color: var(--text);
+  }
+  .patron-card:hover { border-color: var(--track); filter: none; }
+  .patron-card:active { transform: none; }
+  .patron-card[aria-checked="true"] { border-color: var(--line); background: var(--bg); }
+  .patron-card .sprite { width: 85px; height: 100px; }
+  .catchphrase { font-size: 15px; margin: 14px 2px 0; }
 </style>
 </head>
 <body>
@@ -56,13 +63,8 @@
 
   <section aria-labelledby="patron-title">
     <h2 id="patron-title">Your patron</h2>
-    <div class="patron-pick frame">
-      <div class="preview sprite" id="preview" role="img"></div>
-      <div style="flex:1">
-        <select id="patron" aria-label="Patron"></select>
-        <p class="catchphrase" id="catchphrase"></p>
-      </div>
-    </div>
+    <div class="patrons frame" id="patrons" role="radiogroup" aria-labelledby="patron-title"></div>
+    <p class="catchphrase" id="catchphrase"></p>
   </section>
 </main>
 <script type="module" src="src/options.js"></script>
