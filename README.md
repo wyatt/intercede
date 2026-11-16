@@ -24,7 +24,7 @@ When you spend too long on a tracked site (YouTube, Reddit, etc.), St. Alphonsus
 - **Bundled pet: St. Alphonsus Liguori** — 7-animation sprite sheet shipped in the app, so nudges never depend on the network; his catchphrase "This is not Liguorian!" heads every bubble
 - **Menu bar** — pixel-art icon, popover with live budget bars per site, debug status indicator
 - **Settings** — site list CRUD (accepts bare hosts or pasted URLs), per-site daily budget (stepper, minutes, saved immediately), pet picker with preview
-- **Curated companions** — five more pets from [petdex.dev](https://petdex.dev), each with its own name, catchphrase, and phrases: Hazel the Fawn, Maple the Red Panda, Pip the Penguin, Bramble the Hedgehog, Boba the Axolotl. Sprites download once and are cached; St. Alphonsus stands in until they're ready
+- **More saints** — St. Isidore of Seville ("Even the patron of the internet says log off!"), St. Clare of Assisi ("As patron of screens, I've seen enough."), St. Benedict ("Idleness is the enemy of the soul!"), and St. Thomas Aquinas ("I answer that: close the tab."). Their phrases are written; each appears in the picker once its sprite sheet is added
 - **Persistence** — daily usage stored as JSON in Application Support, survives restarts
 
 ---
@@ -47,7 +47,6 @@ Currently only **easy mode** (single tap dismisses). Planned:
 - Streak counter shown in menu bar popover
 
 ### Richer Sprite System
-- Petdex picker search and richer preview (a basic picker exists today)
 - Idle animations when pet is not nudging (lives in corner of screen)
 
 ### Browser Extension (for Insane Mode)
@@ -89,7 +88,7 @@ FocusPet/
 ├── Nudge/                  # NudgeCoordinator, SpriteOverlayWindow, NudgeOverlayView, SpriteView
 ├── MenuBar/                # MenuBarController (NSStatusItem), StatsView
 ├── Settings/               # SettingsView (sites, budgets, pet)
-├── Pets/                   # Pet (roster, names, phrases), SpriteSheet, PetLibrary, PetdexClient
+├── Pets/                   # Pet (roster, names, phrases), SpriteSheet, PetLibrary
 ├── Resources/Pets/         # bishop.png — packed sprite sheet bundled with the app
 └── Support/                # AccessibilityPermission, Log
 Art/                        # source art (bishop-source.png)
@@ -110,13 +109,13 @@ Sprites are described by `SpriteSheet`: a uniform grid plus a clip (row, frame c
 | 6 | settle | 4 | once — lowers hand |
 | 7 | walkOut | 6 | loop, facing left |
 
-The original art isn't on an even grid and its baselines drift between rows, so `make sprites` repacks `Art/bishop-source.png`: it finds each frame by alpha, drops the matte fringe, and bottom-aligns every frame to a shared baseline. Petdex sheets (8×9) map their rows onto the same clips.
+The original art isn't on an even grid and its baselines drift between rows, so `make sprites` repacks every `Art/<name>-source.png` into `FocusPet/Resources/Pets/<name>.png`: it finds each frame by alpha, drops the matte fringe, and bottom-aligns every frame to a shared baseline. Every companion uses this same 7-row layout.
 
 Key design decisions:
 - All classes are `@MainActor` — no concurrency complexity, all UI and state on main thread
 - AppleScript for URL extraction (Automation TCC permission persists across binary rebuilds; Accessibility TCC does not for unsigned builds)
 - JSON flat files for usage data (one file per day, trivial to inspect/debug)
-- Pets and their phrases are a fixed roster in `Pet.swift`; to add one, give it a Petdex sprite URL (standard 8×9 sheet), a catchphrase, and phrases (`%@` becomes the site)
+- Pets and their phrases are a fixed roster in `Pet.swift`. To add art for one, save its sheet as `Art/<sheetName>-source.png` (7 rows: 6,4,6,6,6,4,6 frames) and run `make sprites`; it appears in the picker on the next build
 
 ---
 

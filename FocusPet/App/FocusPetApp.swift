@@ -24,8 +24,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         let usageTracker = UsageTracker()
         let activityMonitor = ActivityMonitor(usageTracker: usageTracker)
-        let petdex = PetdexClient()
-        let petLibrary = PetLibrary(petdexClient: petdex)
+        let petLibrary = PetLibrary()
         let browserBridge = BrowserBridge()
         browserBridge.start()
         NativeHostInstaller.install()

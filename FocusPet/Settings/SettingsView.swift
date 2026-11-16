@@ -107,7 +107,7 @@ struct PetTab: View {
                 Spacer()
             }
 
-            Text("Other pets download from Petdex on first use; \(Pet.stAlphonsus.name) fills in until they're ready.")
+            Text("More companions join as their artwork is added.")
                 .font(.system(size: 11))
                 .foregroundColor(.secondary)
 

@@ -2,16 +2,12 @@ import Foundation
 
 /// A companion: its art, its name, and what it says. `%@` in a phrase is replaced by the site.
 struct Pet: Identifiable {
-    enum Art {
-        case bundled                      // ships in the app (always available)
-        case petdex(spritesheet: URL)     // downloaded once and cached
-    }
-
     let slug: String
     let name: String
     let catchphrase: String
     let phrases: [String]
-    let art: Art
+    /// Bundled sprite sheet `<sheetName>.png` in the standard FocusPet layout (see SpriteSheet.focusPet).
+    let sheetName: String
 
     var id: String { slug }
 
@@ -43,93 +39,77 @@ extension Pet {
             "I lived to ninety without %@. You'll survive an afternoon.",
             "Time is precious. Spend it on what you'll be glad you did.",
         ],
-        art: .bundled
+        sheetName: "bishop"
     )
 
-    static let hazel = Pet(
-        slug: "little-deer",
-        name: "Hazel the Fawn",
-        catchphrase: "Oh deer, not this again!",
+    static let isidore = Pet(
+        slug: "isidore",
+        name: "St. Isidore of Seville",
+        catchphrase: "Even the patron of the internet says log off!",
         phrases: [
-            "Every minute counts — let's not fawn over %@.",
-            "Antler-ly unacceptable! Back to your task.",
-            "Let's prance back to something productive.",
-            "I'm not mad, just a little doe-sappointed.",
-            "The forest is quiet. Perfect for focusing.",
-            "One small leap back to work — you've got this.",
-            "Your goals are waiting in the meadow. Let's go!",
-            "Deer friend, close the tab!",
+            "I tried to write down all human knowledge. It didn't include %@.",
+            "Twenty books of Etymologies, and not one about doomscrolling.",
+            "Read to learn, not to lose the afternoon.",
+            "Close the tab; open a book.",
+            "Knowledge is gathered slowly. Distraction arrives all at once.",
+            "I'd bless this connection, but you have work to do.",
+            "Seventh-century advice, still good: do your work first.",
+            "An encyclopedia is built one entry at a time. So is your project.",
         ],
-        art: .petdex(spritesheet: URL(string: "https://assets.petdex.dev/pets/little-deer-04f24a352c67/sprite.webp")!)
+        sheetName: "isidore"
     )
 
-    static let maple = Pet(
-        slug: "red-panda",
-        name: "Maple the Red Panda",
-        catchphrase: "Paws off the scroll!",
+    static let clare = Pet(
+        slug: "clare",
+        name: "St. Clare of Assisi",
+        catchphrase: "As patron of screens, I've seen enough.",
         phrases: [
-            "Even I only nap half the day. Time to work!",
-            "Climb back up to your goals!",
-            "Tails up! One task at a time.",
-            "%@ will still be there later. Your focus won't.",
-            "I'm red with concern. Back to work, please!",
-            "Cozy up with your project instead.",
-            "A little progress beats a lot of scrolling.",
-            "Let's bamboo-st through that to-do list!",
+            "I saw Mass on my convent wall from my sickbed. You can look away from %@.",
+            "What you do, may you always do — and never abandon it for %@.",
+            "Love poverty — especially poverty of tabs.",
+            "Gaze upon something worthwhile.",
+            "Go forth in peace — and close the tab.",
+            "Simplicity is a gift. Give yourself some.",
+            "Less screen, more serene.",
+            "Patience, dear one. Your work is waiting.",
         ],
-        art: .petdex(spritesheet: URL(string: "https://assets.petdex.dev/pets/red-panda-92e0542b04d2/sprite.webp")!)
+        sheetName: "clare"
     )
 
-    static let pip = Pet(
-        slug: "penguin-chick",
-        name: "Pip the Penguin",
-        catchphrase: "Waddle back to work!",
+    static let benedict = Pet(
+        slug: "benedict",
+        name: "St. Benedict",
+        catchphrase: "Idleness is the enemy of the soul!",
         phrases: [
-            "Chill out on %@, warm up on your work.",
-            "Let's slide back into focus!",
-            "I'm just a chick, and even I know this is a detour.",
-            "Huddle up with your to-do list.",
-            "Ice to see you — now let's get going!",
-            "Small steps! That's how penguins cross the whole ice.",
-            "Fish later. Focus now.",
-            "Every great swim starts with one paddle. Start your task!",
+            "Ora et labora. Right now, mostly labora.",
+            "Listen with the ear of your heart — not to %@.",
+            "My Rule has seventy-three chapters. None of them are about %@.",
+            "Always we begin again. Begin your work now.",
+            "Keep your hours. This isn't one of them.",
+            "A little rule brings a lot of peace.",
+            "The bell has rung. Back to work!",
+            "Stability, my friend. Stay with your task.",
         ],
-        art: .petdex(spritesheet: URL(string: "https://assets.petdex.dev/pets/penguin-chick-30034f1536e7/sprite.webp")!)
+        sheetName: "benedict"
     )
 
-    static let bramble = Pet(
-        slug: "hedgehog",
-        name: "Bramble the Hedgehog",
-        catchphrase: "Let's get to the point!",
+    static let aquinas = Pet(
+        slug: "aquinas",
+        name: "St. Thomas Aquinas",
+        catchphrase: "I answer that: close the tab.",
         phrases: [
-            "This is getting a little prickly. Back to work?",
-            "Curl up with your project, not with %@.",
-            "Slow and steady still gets things done.",
-            "I'm small, but my standards are sharp.",
-            "Snuffle out one thing to finish, and do it now.",
-            "A few focused minutes, then a well-earned snack.",
-            "No need to bristle. Just close the tab!",
-            "Hedge your bets on finishing that task.",
+            "Objection: %@ is fun. I answer that: so is finished work.",
+            "I kept four scribes busy at once. You can manage one tab.",
+            "They called me the Dumb Ox. Oxen plow straight furrows.",
+            "The Summa wasn't written in a day. Start your part of it.",
+            "Wonder is the desire for knowledge. %@ is not wonder.",
+            "The patron of students says: study now.",
+            "Reason suggests one task at a time.",
+            "First principles: do the work, then rest.",
         ],
-        art: .petdex(spritesheet: URL(string: "https://assets.petdex.dev/pets/hedgehog-6327930213ab/sprite.webp")!)
+        sheetName: "aquinas"
     )
 
-    static let boba = Pet(
-        slug: "blue-boba-axolotl",
-        name: "Boba the Axolotl",
-        catchphrase: "I axolotl you to get back to work!",
-        phrases: [
-            "I can regrow a leg. I can't regrow your afternoon.",
-            "Sip, breathe, and get back to it.",
-            "Let's bubble up some productivity!",
-            "Stay chill, stay focused.",
-            "%@ can wait. Your work is ready now.",
-            "Every tiny step forward counts — even with tiny legs.",
-            "Smile! Then close the tab.",
-            "Pearls of wisdom: do the hard thing first.",
-        ],
-        art: .petdex(spritesheet: URL(string: "https://assets.petdex.dev/pets/blue-boba-axolotl-95e9366e6389/sprite.webp")!)
-    )
-
-    static let roster: [Pet] = [stAlphonsus, hazel, maple, pip, bramble, boba]
+    /// Pets appear in the app once their sheet is bundled (see `PetLibrary.availablePets`).
+    static let roster: [Pet] = [stAlphonsus, isidore, clare, benedict, aquinas]
 }

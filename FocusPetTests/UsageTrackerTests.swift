@@ -212,8 +212,8 @@ final class SpriteSheetTests: XCTestCase {
 
 final class PetTests: XCTestCase {
     func testRosterIsStAlphonsusPlusFiveCuratedPets() {
-        XCTAssertEqual(Pet.roster.count, 6)
-        XCTAssertEqual(Pet.roster.first?.name, "St. Alphonsus Liguori")
+        XCTAssertEqual(Pet.roster.map(\.name), ["St. Alphonsus Liguori", "St. Isidore of Seville",
+                                                "St. Clare of Assisi", "St. Benedict", "St. Thomas Aquinas"])
         XCTAssertEqual(Pet.stAlphonsus.catchphrase, "This is not Liguorian!")
         XCTAssertEqual(Set(Pet.roster.map(\.slug)).count, Pet.roster.count, "slugs must be unique")
     }
@@ -281,18 +281,26 @@ final class NudgeSceneTests: XCTestCase {
 final class PetLibraryTests: XCTestCase {
     func testBuiltInPetIsStAlphonsusWithCatchphrase() {
         let suite = "FocusPetTests-\(UUID().uuidString)"
-        let library = PetLibrary(petdexClient: PetdexClient(), defaults: UserDefaults(suiteName: suite)!)
+        let library = PetLibrary(defaults: UserDefaults(suiteName: suite)!)
         XCTAssertEqual(library.selectedPetSlug, Pet.stAlphonsus.slug)
         XCTAssertEqual(library.current.pet.catchphrase, "This is not Liguorian!")
         XCTAssertTrue(library.current.sheet === SpriteSheet.bishop)
         UserDefaults().removePersistentDomain(forName: suite)
     }
 
+    func testOnlyPetsWithBundledArtAreOffered() {
+        let library = PetLibrary(defaults: UserDefaults(suiteName: "FocusPetTests-\(UUID().uuidString)")!)
+        XCTAssertEqual(library.availablePets.first?.slug, Pet.stAlphonsus.slug)
+        for pet in library.availablePets {
+            XCTAssertNotNil(SpriteSheet.bundled(pet.sheetName), pet.name)
+        }
+    }
+
     func testUnknownSavedPetFallsBackToStAlphonsus() {
         let suite = "FocusPetTests-\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: suite)!
         defaults.set("some-removed-petdex-pet", forKey: "selectedPetSlug")
-        let library = PetLibrary(petdexClient: PetdexClient(), defaults: defaults)
+        let library = PetLibrary(defaults: defaults)
         XCTAssertEqual(library.selectedPetSlug, Pet.stAlphonsus.slug)
         defaults.removePersistentDomain(forName: suite)
     }

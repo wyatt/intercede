@@ -61,11 +61,10 @@ final class SpriteSheet: @unchecked Sendable {  // immutable after init
 }
 
 extension SpriteSheet {
-    /// Bundled bishop: 6×7 grid, 176×200 cells (packed by tools/pack-sprite.swift).
-    static let bishop: SpriteSheet? = {
-        guard let url = Bundle.main.url(forResource: "bishop", withExtension: "png"),
-              let image = loadCGImage(url) else { return nil }
-        return SpriteSheet(image: image, cols: 6, rows: 7, clips: [
+    /// The FocusPet layout every companion uses: a 6×7 grid of 176×200 cells, one row per beat
+    /// (walk in, idle, raise hand, speak, dismiss, lower hand, walk out), packed by tools/pack-sprite.swift.
+    static func focusPet(_ image: CGImage) -> SpriteSheet? {
+        SpriteSheet(image: image, cols: 6, rows: 7, clips: [
             .walkIn:  SpriteClip(row: 0, frames: 6, fps: 9, loops: true),
             .idle:    SpriteClip(row: 1, frames: 4, fps: 5, loops: true),
             .alert:   SpriteClip(row: 2, frames: 6, fps: 9, loops: false),
@@ -74,20 +73,24 @@ extension SpriteSheet {
             .settle:  SpriteClip(row: 5, frames: 4, fps: 7, loops: false),
             .walkOut: SpriteClip(row: 6, frames: 6, fps: 9, loops: true),
         ])
-    }()
-
-    /// Petdex standard: 8 cols × 9 rows (idle, run-right, run-left, waving, jumping, failed, waiting, running, review).
-    static func petdex(_ image: CGImage) -> SpriteSheet? {
-        SpriteSheet(image: image, cols: 8, rows: 9, clips: [
-            .walkIn:  SpriteClip(row: 1, frames: 8, fps: 10, loops: true),
-            .idle:    SpriteClip(row: 0, frames: 6, fps: 8, loops: true),
-            .alert:   SpriteClip(row: 3, frames: 4, fps: 8, loops: false),
-            .talk:    SpriteClip(row: 3, frames: 4, fps: 6, loops: true),
-            .dismiss: SpriteClip(row: 4, frames: 5, fps: 10, loops: false),
-            .settle:  SpriteClip(row: 0, frames: 6, fps: 8, loops: false),
-            .walkOut: SpriteClip(row: 2, frames: 8, fps: 10, loops: true),
-        ])
     }
+
+    /// The bundled sheet named `name` (`<name>.png`), or nil if that art isn't in the app yet.
+    static func bundled(_ name: String) -> SpriteSheet? { bundledSheets[name] }
+
+    static var bishop: SpriteSheet? { bundled("bishop") }
+
+    // Loaded once for every pet in the roster; pets without art are simply absent.
+    private static let bundledSheets: [String: SpriteSheet] = {
+        var sheets: [String: SpriteSheet] = [:]
+        for name in Pet.roster.map(\.sheetName) {
+            guard let url = Bundle.main.url(forResource: name, withExtension: "png"),
+                  let image = loadCGImage(url),
+                  let sheet = focusPet(image) else { continue }
+            sheets[name] = sheet
+        }
+        return sheets
+    }()
 
     static func loadCGImage(_ url: URL) -> CGImage? {
         guard let src = CGImageSourceCreateWithURL(url as CFURL, nil) else { return nil }

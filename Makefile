@@ -32,9 +32,13 @@ run: install
 app:
 	tools/build-app.sh
 
-# Repack the bishop source art into the uniform grid the app slices
+# Repack every Art/<name>-source.png into FocusPet/Resources/Pets/<name>.png (the uniform grid the app
+# slices). Each sheet uses the 7-row layout: 6,4,6,6,6,4,6 frames.
 sprites:
-	swift tools/pack-sprite.swift Art/bishop-source.png FocusPet/Resources/Pets/bishop.png 6,4,6,6,6,4,6
+	@for src in Art/*-source.png; do \
+		name=$$(basename "$$src" -source.png); \
+		swift tools/pack-sprite.swift "$$src" "FocusPet/Resources/Pets/$$name.png" 6,4,6,6,6,4,6 | tail -1; \
+	done
 
 # Rebuild the app icon from the bishop sprite
 icon:
