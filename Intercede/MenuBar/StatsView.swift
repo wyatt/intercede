@@ -6,12 +6,12 @@ struct StatsView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("TODAY'S FOCUS STATS")
-                .font(.system(size: 10, weight: .bold, design: .monospaced))
+                .font(.system(size: 10, weight: .bold))
                 .foregroundColor(.secondary)
 
             if usageTracker.siteConfigs.isEmpty {
                 Text("No sites configured.")
-                    .font(.system(size: 12, design: .monospaced))
+                    .font(.system(size: 12))
                     .foregroundColor(.secondary)
             } else {
                 ForEach(usageTracker.siteConfigs) { config in
@@ -39,14 +39,14 @@ struct SiteBudgetRow: View {
         VStack(alignment: .leading, spacing: 4) {
             HStack {
                 Text(host)
-                    .font(.system(size: 11, weight: .medium, design: .monospaced))
+                    .font(.system(size: 11, weight: .medium))
                     .lineLimit(1)
                 Spacer()
                 Text(formatTime(used))
-                    .font(.system(size: 11, design: .monospaced))
+                    .font(.system(size: 11))
                     .foregroundColor(isOverBudget ? .red : .primary)
                 Text("/ \(formatTime(budget))")
-                    .font(.system(size: 11, design: .monospaced))
+                    .font(.system(size: 11))
                     .foregroundColor(.secondary)
             }
             GeometryReader { geo in

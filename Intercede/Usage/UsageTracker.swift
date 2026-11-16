@@ -82,6 +82,11 @@ final class UsageTracker: ObservableObject {
         return true
     }
 
+    /// Stops tracking a site. Today's recorded time for it is kept in the usage history.
+    func removeSite(_ host: String) {
+        siteConfigs.removeAll { Self.normalize(host: $0.host) == Self.normalize(host: host) }
+    }
+
     func saveSiteConfigs() {
         guard let data = try? JSONEncoder().encode(siteConfigs) else { return }
         defaults.set(data, forKey: siteConfigsKey)

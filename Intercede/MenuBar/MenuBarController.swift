@@ -123,7 +123,7 @@ struct MenuBarPopoverView: View {
         VStack(spacing: 0) {
             HStack {
                 Text("INTERCEDE")
-                    .font(.system(size: 14, weight: .bold, design: .monospaced))
+                    .font(.system(size: 14, weight: .bold))
                 Spacer()
                 Button(action: openSettings) {
                     Image(systemName: "gearshape.fill")
@@ -139,7 +139,7 @@ struct MenuBarPopoverView: View {
                     HStack(spacing: 6) {
                         Image(systemName: "exclamationmark.triangle.fill").foregroundColor(.orange)
                         Text("Firefox needs Accessibility permission")
-                            .font(.system(size: 11, design: .monospaced))
+                            .font(.system(size: 11))
                     }
                     .padding(.horizontal, 12)
                     .padding(.vertical, 6)
@@ -159,12 +159,12 @@ struct MenuBarPopoverView: View {
 
             HStack {
                 Button("Test Nudge") { testNudge() }
-                    .font(.system(size: 10, design: .monospaced))
+                    .font(.system(size: 10))
                     .buttonStyle(.plain)
                     .foregroundColor(.secondary)
                 Spacer()
                 Button("Quit") { NSApp.terminate(nil) }
-                    .font(.system(size: 11, design: .monospaced))
+                    .font(.system(size: 11))
                     .buttonStyle(.plain)
                     .foregroundColor(.secondary)
             }

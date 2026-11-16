@@ -127,6 +127,17 @@ final class UsageTrackerTests: XCTestCase {
         XCTAssertFalse(tracker.addSite("localhost"))
     }
 
+    func testRemoveSiteStopsTrackingAndPersists() {
+        let tracker = makeTracker([SiteConfig(host: "youtube.com", dailyBudgetSeconds: 900),
+                                   SiteConfig(host: "reddit.com", dailyBudgetSeconds: 900)])
+        tracker.removeSite("www.YouTube.com")
+        XCTAssertEqual(tracker.siteConfigs.map(\.host), ["reddit.com"])
+        tracker.record(host: "youtube.com", elapsed: 5)
+        XCTAssertEqual(tracker.seconds(for: "youtube.com"), 0.0)
+        let reloaded = UsageTracker(store: UsageStore(directory: dir), defaults: defaults)
+        XCTAssertEqual(reloaded.siteConfigs.map(\.host), ["reddit.com"])
+    }
+
     func testDateKeyIsGregorianRegardlessOfLocale() {
         let date = Date(timeIntervalSince1970: 1_700_000_000)  // 2023-11-14 UTC
         XCTAssertTrue(DailyUsage.key(for: date).hasPrefix("2023-11-1"))

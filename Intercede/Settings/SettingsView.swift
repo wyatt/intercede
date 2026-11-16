@@ -26,13 +26,13 @@ struct SitesTab: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Tracked Sites")
-                .font(.system(size: 13, weight: .semibold, design: .monospaced))
+                .font(.system(size: 13, weight: .semibold))
 
             List {
                 ForEach($usageTracker.siteConfigs) { $config in
                     HStack {
                         Text(config.host)
-                            .font(.system(size: 12, design: .monospaced))
+                            .font(.system(size: 12))
                             .frame(minWidth: 140, alignment: .leading)
                         Spacer()
                         Stepper(
@@ -44,9 +44,18 @@ struct SitesTab: View {
                             step: 5
                         ) {
                             Text("\(Int(config.dailyBudgetSeconds / 60)) min")
-                                .font(.system(size: 12, design: .monospaced))
+                                .font(.system(size: 12))
                                 .frame(width: 60)
                         }
+                        Button {
+                            usageTracker.removeSite(config.host)
+                        } label: {
+                            Image(systemName: "minus.circle.fill")
+                                .foregroundColor(.secondary)
+                        }
+                        .buttonStyle(.borderless)
+                        .help("Stop tracking \(config.host)")
+                        .accessibilityLabel("Remove \(config.host)")
                     }
                 }
                 .onDelete { indices in
@@ -57,7 +66,7 @@ struct SitesTab: View {
 
             HStack {
                 TextField("new site (e.g. twitch.tv)", text: $newHost)
-                    .font(.system(size: 12, design: .monospaced))
+                    .font(.system(size: 12))
                     .textFieldStyle(.roundedBorder)
                     .onSubmit(add)
                     .onChange(of: newHost) { rejected = false }
@@ -66,7 +75,7 @@ struct SitesTab: View {
             }
             if rejected {
                 Text("Not a valid site, or already tracked.")
-                    .font(.system(size: 11, design: .monospaced))
+                    .font(.system(size: 11))
                     .foregroundColor(.red)
             }
         }
@@ -88,7 +97,7 @@ struct PatronTab: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Your Patron")
-                .font(.system(size: 13, weight: .semibold, design: .monospaced))
+                .font(.system(size: 13, weight: .semibold))
 
             Picker("Patron", selection: $patronLibrary.selectedPatronSlug) {
                 ForEach(patronLibrary.availablePatrons) { patron in
@@ -102,7 +111,7 @@ struct PatronTab: View {
                 VStack(spacing: 8) {
                     SpriteView(sheet: current.sheet, animation: .idle, height: 140)
                     Text("“\(current.patron.catchphrase)”")
-                        .font(.system(size: 12, weight: .bold, design: .monospaced))
+                        .font(.system(size: 12, weight: .bold))
                 }
                 Spacer()
             }
