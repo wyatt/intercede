@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
-  "name": "FocusPet",
-  "description": "Lets your FocusPet companion dissolve the distracting page when it shows up.",
+  "name": "Intercede",
+  "description": "Lets your Intercede patron dissolve the distracting page when they show up.",
   "version": "0.1.0",
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlkEnw3dJee/kELm1iny+ONo3tNT8hqbiJziO58U5DwDjRtC0+ZL51W1C2asvBo13ccNlaZ1rmXrnS065vytpzYJD51MNv729g0jZiQBzn2wXgLYjR278lDpJvy4T0j1/KJ7VXeLmtYeH4SJiTKmWLO848pCuLmHNzGmX49W9X4Qw4qbj8gYlVzLFZU/qiqzw0btREKYo+sdwzL8hXKxeFzz8g1WNoRScDuDutqL120eWM1uP35fGDOyXfbYrmPUMlb1lQ2SRgE+0xMDItKPsyQXyI3sA4GWoe3In+WepPsAxxUKGvA6roUlma2PYmMfDnnXAheCXYSclTtkg9rApTQIDAQAB",
   "minimum_chrome_version": "110",

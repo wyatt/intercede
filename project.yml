@@ -1,6 +1,6 @@
-name: FocusPet
+name: Intercede
 options:
-  bundleIdPrefix: com.focuspet
+  bundleIdPrefix: com.intercede
   deploymentTarget:
     macOS: "14.0"
   xcodeVersion: "16"
@@ -14,62 +14,62 @@ settings:
     ENABLE_HARDENED_RUNTIME: YES
 
 targets:
-  FocusPet:
+  Intercede:
     type: application
     platform: macOS
     sources:
-      - FocusPet
+      - Intercede
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.focuspet.app
-        INFOPLIST_FILE: FocusPet/Resources/Info.plist
-        CODE_SIGN_ENTITLEMENTS: FocusPet/Resources/FocusPet.entitlements
+        PRODUCT_BUNDLE_IDENTIFIER: com.intercede.app
+        INFOPLIST_FILE: Intercede/Resources/Info.plist
+        CODE_SIGN_ENTITLEMENTS: Intercede/Resources/Intercede.entitlements
         CODE_SIGN_STYLE: Automatic
-        PRODUCT_NAME: FocusPet
+        PRODUCT_NAME: Intercede
     dependencies:
-      # Native Messaging host for the browser extension, at Contents/Helpers/FocusPetBridge
-      - target: FocusPetBridge
+      # Native Messaging host for the browser extension, at Contents/Helpers/IntercedeBridge
+      - target: IntercedeBridge
         embed: true
         codeSign: true
         copy:
           destination: wrapper
           subpath: Contents/Helpers
     entitlements:
-      path: FocusPet/Resources/FocusPet.entitlements
+      path: Intercede/Resources/Intercede.entitlements
       # Declared here because xcodegen regenerates the file; without it AppleScript URL reads fail.
       properties:
         com.apple.security.automation.apple-events: true
 
-  FocusPetBridge:
+  IntercedeBridge:
     type: tool
     platform: macOS
     sources:
-      - FocusPetBridge
+      - IntercedeBridge
     settings:
       base:
-        PRODUCT_NAME: FocusPetBridge
-        PRODUCT_BUNDLE_IDENTIFIER: com.focuspet.bridge
+        PRODUCT_NAME: IntercedeBridge
+        PRODUCT_BUNDLE_IDENTIFIER: com.intercede.bridge
         SKIP_INSTALL: YES
 
-  FocusPetTests:
+  IntercedeTests:
     type: bundle.unit-test
     platform: macOS
     sources:
-      - FocusPetTests
+      - IntercedeTests
     dependencies:
-      - target: FocusPet
+      - target: Intercede
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.focuspet.tests
+        PRODUCT_BUNDLE_IDENTIFIER: com.intercede.tests
         BUNDLE_LOADER: "$(TEST_HOST)"
-        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/FocusPet.app/Contents/MacOS/FocusPet"
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/Intercede.app/Contents/MacOS/Intercede"
 
 schemes:
-  FocusPet:
+  Intercede:
     build:
       targets:
-        FocusPet: all
-        FocusPetTests: [test]
+        Intercede: all
+        IntercedeTests: [test]
     test:
       targets:
-        - FocusPetTests
+        - IntercedeTests

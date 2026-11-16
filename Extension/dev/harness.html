@@ -59,14 +59,14 @@
 </div>
 
 <div id="controls">
-  <h2>FocusPet dissolve harness</h2>
+  <h2>Intercede dissolve harness</h2>
   <div class="row">
     <button id="nudge" class="primary" title="N">Simulate nudge</button>
     <button id="hold" title="H">Hold</button>
     <button id="dissolve" title="D">Dissolve</button>
     <button id="reset" title="R">Reset</button>
   </div>
-  <label>Pet <select id="pet"></select></label>
+  <label>Patron <select id="patron"></select></label>
   <label>Mode
     <select id="mode">
       <option value="scatter">scatter (snapshot)</option>
@@ -82,8 +82,8 @@
 
 <script src="../src/dissolve.js"></script>
 <script>
-// Mirrors Pet.swift (name, catchphrase, one phrase). In the extension these arrive from the app.
-const PETS = [
+// Mirrors Patron.swift (name, catchphrase, one phrase). In the extension these arrive from the app.
+const PATRONS = [
   { name: 'St. Alphonsus Liguori', catchphrase: 'This is not Liguorian!', phrase: 'I vowed never to waste a moment. Shall we try it together?' },
   { name: 'St. Isidore of Seville', catchphrase: 'Even the patron of the internet says log off!', phrase: 'Close the tab; open a book.' },
   { name: 'St. Clare of Assisi', catchphrase: "As patron of screens, I've seen enough.", phrase: 'Less screen, more serene.' },
@@ -94,7 +94,7 @@ const PETS = [
 const HOLD_AT_MS = 2200, SWEEP_AFTER_HOLD_MS = 2000;
 
 const $ = id => document.getElementById(id);
-const D = FocusPetDissolve;
+const D = IntercedeDissolve;
 
 // ── Fake site content ──────────────────────────────────────────────────────
 const hues = [12, 200, 280, 40, 150, 330, 90, 260, 0, 180, 220, 300];
@@ -146,8 +146,8 @@ async function snapshotPage() {
 
 // ── Controls ───────────────────────────────────────────────────────────────
 const prefs = (() => { try { return JSON.parse(localStorage.getItem('fp-harness') || '{}'); } catch { return {}; } })();
-$('pet').innerHTML = PETS.map((p, i) => `<option value="${i}">${p.name}</option>`).join('');
-$('pet').value = prefs.pet ?? 0;
+$('patron').innerHTML = PATRONS.map((p, i) => `<option value="${i}">${p.name}</option>`).join('');
+$('patron').value = prefs.patron ?? 0;
 $('mode').value = prefs.mode ?? 'scatter';
 $('duration').value = prefs.duration ?? D.defaults.durationMs;
 $('tile').value = prefs.tile ?? D.defaults.tileSize;
@@ -159,7 +159,7 @@ function syncOutputs() {
   $('tileOut').textContent = $('tile').value;
   $('goldOut').textContent = $('gold').value + '%';
   try {
-    localStorage.setItem('fp-harness', JSON.stringify({ pet: $('pet').value, mode: $('mode').value,
+    localStorage.setItem('fp-harness', JSON.stringify({ patron: $('patron').value, mode: $('mode').value,
       duration: $('duration').value, tile: $('tile').value, gold: $('gold').value, reduced: $('reduced').checked }));
   } catch {}
 }
@@ -175,7 +175,7 @@ function doHold() {
 }
 
 async function doDissolve() {
-  const pet = PETS[+$('pet').value];
+  const patron = PATRONS[+$('patron').value];
   const t0 = performance.now();
   const snapshot = $('mode').value === 'scatter' ? await snapshotPage() : null;
   const result = await D.dissolve({
@@ -184,7 +184,7 @@ async function doDissolve() {
     tileSize: +$('tile').value,
     goldFraction: +$('gold').value / 100,
     reducedMotion: $('reduced').checked || undefined,
-    petName: pet.name, catchphrase: pet.catchphrase, phrase: pet.phrase,
+    patronName: patron.name, catchphrase: patron.catchphrase, phrase: patron.phrase,
     onReturn: () => { player.play().catch(() => {}); status('returned anyway → state=' + D.state); },
   });
   status(`dissolve → ${JSON.stringify(result)} in ${Math.round(performance.now() - t0)}ms, state=${D.state}`);
@@ -199,7 +199,7 @@ function reset() {
 
 function simulateNudge() {
   reset();
-  status('pet walking in…');
+  status('patron walking in…');
   timers.push(setTimeout(doHold, HOLD_AT_MS));
   timers.push(setTimeout(doDissolve, HOLD_AT_MS + SWEEP_AFTER_HOLD_MS));
 }

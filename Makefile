@@ -1,6 +1,6 @@
-APP_NAME = FocusPet
-SCHEME = FocusPet
-BUNDLE_ID = com.focuspet.app
+APP_NAME = Intercede
+SCHEME = Intercede
+BUNDLE_ID = com.intercede.app
 DERIVED = .build/DerivedData
 BUILD_DIR = $(DERIVED)/Build/Products/Debug
 INSTALL_DIR = $(HOME)/Applications
@@ -32,17 +32,17 @@ run: install
 app:
 	tools/build-app.sh
 
-# Repack every Art/<name>-source.png into FocusPet/Resources/Pets/<name>.png (the uniform grid the app
+# Repack every Art/<name>-source.png into Intercede/Resources/Patrons/<name>.png (the uniform grid the app
 # slices). Each sheet uses the 7-row layout: 6,4,6,6,6,4,6 frames.
 sprites:
 	@for src in Art/*-source.png; do \
 		name=$$(basename "$$src" -source.png); \
-		swift tools/pack-sprite.swift "$$src" "FocusPet/Resources/Pets/$$name.png" 6,4,6,6,6,4,6 | tail -1; \
+		swift tools/pack-sprite.swift "$$src" "Intercede/Resources/Patrons/$$name.png" 6,4,6,6,6,4,6 | tail -1; \
 	done
 
 # Rebuild the app icon from the bishop sprite
 icon:
-	swift tools/make-icon.swift FocusPet/Resources/Pets/liguori.png FocusPet/Resources/AppIcon.icns
+	swift tools/make-icon.swift Intercede/Resources/Patrons/liguori.png Intercede/Resources/AppIcon.icns
 
 reset-tcc:
 	tccutil reset Accessibility $(BUNDLE_ID)

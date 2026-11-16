@@ -1,14 +1,14 @@
-// FocusPet extension background worker.
+// Intercede extension background worker.
 //
-// Holds a Native Messaging port to the FocusPet app (via the FocusPetBridge helper) and turns its
+// Holds a Native Messaging port to the Intercede app (via the IntercedeBridge helper) and turns its
 // nudge beats into page effects on exactly one tab:
-//   hold     → pause media, dim           (pet raises his hand)
-//   dissolve → snapshot + pixel dissolve   (pet sweeps it away), then the veil
+//   hold     → pause media, dim           (patron raises his hand)
+//   dissolve → snapshot + pixel dissolve   (patron sweeps it away), then the veil
 //   release  → undo a hold that never became a dissolve
 // The app broadcasts to every connected browser; each acts only if one of its windows is focused
 // and its active tab is on the nudged site (or any site, for Test Nudge).
 
-const HOST_NAME = 'com.focuspet.bridge';
+const HOST_NAME = 'com.intercede.bridge';
 const PROTOCOL = 1;
 const RECONNECT_MIN_MS = 2000;
 const RECONNECT_MAX_MS = 60000;
@@ -26,12 +26,12 @@ function connect() {
   try {
     port = chrome.runtime.connectNative(HOST_NAME);
   } catch (e) {
-    console.warn('[focuspet] connectNative threw', e);
+    console.warn('[intercede] connectNative threw', e);
     return scheduleReconnect();
   }
   port.onMessage.addListener(onAppMessage);
   port.onDisconnect.addListener(() => {
-    console.warn('[focuspet] bridge disconnected:', chrome.runtime.lastError?.message);
+    console.warn('[intercede] bridge disconnected:', chrome.runtime.lastError?.message);
     port = null;
     scheduleReconnect();
   });
@@ -45,7 +45,7 @@ function scheduleReconnect() {
 }
 
 function send(message) {
-  try { port?.postMessage({ v: PROTOCOL, ...message }); } catch (e) { console.warn('[focuspet] send failed', e); }
+  try { port?.postMessage({ v: PROTOCOL, ...message }); } catch (e) { console.warn('[intercede] send failed', e); }
 }
 
 function browserName() {
@@ -56,7 +56,7 @@ function browserName() {
 // The open port keeps this worker alive; these cover browser start and the worker being evicted.
 chrome.runtime.onStartup.addListener(connect);
 chrome.runtime.onInstalled.addListener(connect);
-chrome.alarms.create('focuspet-keepalive', { periodInMinutes: 1 });
+chrome.alarms.create('intercede-keepalive', { periodInMinutes: 1 });
 chrome.alarms.onAlarm.addListener(() => connect());
 connect();
 
@@ -82,7 +82,7 @@ async function onHold(msg) {
   await inject(tab.id);
   const [{ result }] = await chrome.scripting.executeScript({
     target: { tabId: tab.id },
-    func: () => FocusPetDissolve.hold(),
+    func: () => IntercedeDissolve.hold(),
   });
   ack(msg, true, `paused ${result?.paused ?? 0} media`);
 }
@@ -102,20 +102,20 @@ async function onDissolve(msg) {
   await inject(tabId);
   // Snapshot what's on screen right now (dimmed by hold) so the dissolve starts seamlessly.
   const snapshot = await chrome.tabs.captureVisibleTab(tab.windowId, { format: 'jpeg', quality: 85 })
-    .catch(e => { console.warn('[focuspet] capture failed, using cover mode', e); return null; });
+    .catch(e => { console.warn('[intercede] capture failed, using cover mode', e); return null; });
 
   const [{ result }] = await chrome.scripting.executeScript({
     target: { tabId },
     args: [{
       snapshot,
       durationMs: msg.durationMs,
-      petName: msg.petName,
+      patronName: msg.patronName,
       catchphrase: msg.catchphrase,
       phrase: msg.phrase,
       nudgeId: msg.nudgeId,
       host: msg.host,
     }],
-    func: async options => FocusPetDissolve.dissolve({
+    func: async options => IntercedeDissolve.dissolve({
       ...options,
       onReturn: () => chrome.runtime.sendMessage({ type: 'returnAnyway', nudgeId: options.nudgeId, host: options.host }),
     }),
@@ -130,7 +130,7 @@ async function onRelease(msg) {
   if (tabId === undefined) return;
   await chrome.scripting.executeScript({
     target: { tabId },
-    func: () => globalThis.FocusPetDissolve?.release(),
+    func: () => globalThis.IntercedeDissolve?.release(),
   }).catch(() => {});
   ack(msg, true, 'released');
 }

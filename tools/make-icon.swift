@@ -15,7 +15,7 @@ guard args.count == 3,
     print("usage: make-icon.swift <liguori.png> <out.icns>"); exit(1)
 }
 
-// Idle row, first frame (6×7 grid, see SpriteSheet.focusPet).
+// Idle row, first frame (6×7 grid, see SpriteSheet.standard).
 let cellW = sheet.width / 6, cellH = sheet.height / 7
 let frame = sheet.cropping(to: CGRect(x: 0, y: cellH, width: cellW, height: cellH))!
 

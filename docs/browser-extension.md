@@ -1,6 +1,6 @@
 # Browser Extension: Page Dissolve — Blueprint
 
-**Status:** decisions D1–D4 settled (recommendations adopted) · harness built · **Goal:** when the pet shows up on a distracting site, the page itself reacts — it holds still while he raises his hand, then dissolves into pixels as he sweeps it away.
+**Status:** decisions D1–D4 settled (recommendations adopted) · harness built · **Goal:** when the patron shows up on a distracting site, the page itself reacts — it holds still while he raises his hand, then dissolves into pixels as he sweeps it away.
 
 The native app already knows *when* (budget breach → nudge) and *what site*. It can't touch page content, though: AppleScript can read a tab's URL but can't run an effect on the page. A browser extension can. This doc covers the effect, how the app and extension talk, and a phased build plan.
 
@@ -20,18 +20,18 @@ The native app already knows *when* (budget breach → nudge) and *what site*. I
 ## Architecture
 
 ```
-┌──────────── FocusPet.app ─────────────┐        ┌────────── Browser ──────────┐
+┌──────────── Intercede.app ─────────────┐        ┌────────── Browser ──────────┐
 │ NudgeCoordinator                      │        │ background service worker   │
 │   └─ NudgeScene (walkIn…dismiss…)     │        │   ├─ chrome.runtime          │
 │        │ phase events                 │        │   │   .connectNative(...)    │
 │        ▼                              │        │   └─ routes to active tab    │
 │ BrowserBridge  (Unix socket server)   │        │            │                 │
 │   ~/Library/Application Support/      │        │            ▼                 │
-│   FocusPet/bridge.sock  (0600)        │        │ dissolve.js (injected into   │
+│   Intercede/bridge.sock  (0600)        │        │ dissolve.js (injected into   │
 └──────────────▲────────────────────────┘        │   the matching tab only)     │
                │ newline-delimited JSON          └────────────▲────────────────┘
 ┌──────────────┴────────────────────────┐                     │ stdio, 4-byte
-│ FocusPetBridge  (tiny helper binary,  │◄────────────────────┘ length + JSON
+│ IntercedeBridge  (tiny helper binary,  │◄────────────────────┘ length + JSON
 │ Contents/Helpers/, launched BY the    │      (Native Messaging)
 │ browser, one per browser profile)     │
 └───────────────────────────────────────┘
@@ -48,15 +48,15 @@ The native app already knows *when* (budget breach → nudge) and *what site*. I
 
 The helper is ~100 lines and the security story is much better. **Native Messaging wins.**
 
-**Helper vs. main binary:** the browser launches the host executable itself. Pointing it at the main `FocusPet` binary would start a second menu-bar app, so the host is a separate `FocusPetBridge` helper with no UI. It connects to the running app's socket; if the app isn't running, it tells the extension `{"type":"appUnavailable"}` and exits.
+**Helper vs. main binary:** the browser launches the host executable itself. Pointing it at the main `Intercede` binary would start a second menu-bar app, so the host is a separate `IntercedeBridge` helper with no UI. It connects to the running app's socket; if the app isn't running, it tells the extension `{"type":"appUnavailable"}` and exits.
 
 ### Host manifest (written by the app on launch, idempotent)
 
 ```json
 {
-  "name": "com.focuspet.bridge",
-  "description": "FocusPet browser bridge",
-  "path": "/Users/<you>/Applications/FocusPet.app/Contents/Helpers/FocusPetBridge",
+  "name": "com.intercede.bridge",
+  "description": "Intercede browser bridge",
+  "path": "/Users/<you>/Applications/Intercede.app/Contents/Helpers/IntercedeBridge",
   "type": "stdio",
   "allowed_origins": ["chrome-extension://<fixed-extension-id>/"]
 }
@@ -91,7 +91,7 @@ All messages are JSON with `type` and `v: 1`. The helper relays them unchanged i
 | type | fields | when (sprite beat) |
 |---|---|---|
 | `hold` | `nudgeId`, `host` | `alert` starts (hand rises) |
-| `dissolve` | `nudgeId`, `host`, `durationMs`, `petName`, `phrase` | `dismiss` starts (golden sweep) |
+| `dissolve` | `nudgeId`, `host`, `durationMs`, `patronName`, `phrase` | `dismiss` starts (golden sweep) |
 | `release` | `nudgeId` | nudge ended without a dissolve (e.g. replaced) — un-hold the page |
 
 **Targeting rule:** act only on the **active tab of the focused window** whose host matches `host`, using the same normalization as `UsageTracker` (strip `www.`, subdomains match). Otherwise reply `ack ok:false` and do nothing. Background tabs and other sites are never touched.
@@ -105,10 +105,10 @@ Injected on demand with `chrome.scripting.executeScript`, so it never runs on pa
 1. **Hold:** pause every `<video>`/`<audio>`. If the page is fullscreen, call `document.exitFullscreen()`. Fade in a 25% dim layer.
 2. **Snapshot:** the background worker grabs the visible tab with `chrome.tabs.captureVisibleTab` and passes the image to the content script.
 3. **Dissolve:** a full-viewport `<canvas>` inside a **closed Shadow DOM** host at `z-index: 2147483647`, so page CSS can't reach it. It draws the snapshot, then hides the real page underneath.
-   - The snapshot is cut into **8×8 px tiles**, each with a random threshold biased by distance from the bottom-left (where the pet stands), so the dissolve sweeps away from his hand.
+   - The snapshot is cut into **8×8 px tiles**, each with a random threshold biased by distance from the bottom-left (where the patron stands), so the dissolve sweeps away from his hand.
    - Tiles past their threshold drift up and fade. A few become **gold** (`#E8C15A`, matching his halo) and twinkle for ~300 ms: the "tiny golden pixels".
    - Duration ≈ the `dismiss` clip plus `settle` (~1.2 s), so the page is gone as he lowers his hand.
-4. **Veil (D1a):** a calm parchment-coloured layer with the pet's catchphrase and phrase, plus a **Return anyway** button. That button removes the veil and sends `returnAnyway`; the app can log the override and start the normal 5-minute cooldown.
+4. **Veil (D1a):** a calm parchment-coloured layer with the patron's catchphrase and phrase, plus a **Return anyway** button. That button removes the veil and sends `returnAnyway`; the app can log the override and start the normal 5-minute cooldown.
 
 **Fallbacks:** if `captureVisibleTab` fails (some restricted pages, or a capture rate limit), `dissolve()` runs in **cover** mode: the same tile sweep, but veil-coloured tiles settle *over* the live page instead of page tiles drifting away. With `prefers-reduced-motion`, skip the particles and do a 300 ms fade.
 
@@ -118,10 +118,10 @@ Injected on demand with `chrome.scripting.executeScript`, so it never runs on pa
 
 ## App-side changes (Swift)
 
-- **`NudgeScene`** gets phase callbacks (`onPhase: (PetAnimation) -> Void`), fired from `play(_:)`. The coordinator maps `alert` → `hold` and `dismiss` → `dissolve`.
-- **`BrowserBridge`** (new, `FocusPet/Bridge/`): an `NWListener` on a Unix socket at `~/Library/Application Support/FocusPet/bridge.sock` (mode 0600), tracking connected browsers by their `hello`. It sends to the bridge whose `browser` matches the frontmost app, and logs to `Log.bridge`.
+- **`NudgeScene`** gets phase callbacks (`onPhase: (PatronAnimation) -> Void`), fired from `play(_:)`. The coordinator maps `alert` → `hold` and `dismiss` → `dissolve`.
+- **`BrowserBridge`** (new, `Intercede/Bridge/`): an `NWListener` on a Unix socket at `~/Library/Application Support/Intercede/bridge.sock` (mode 0600), tracking connected browsers by their `hello`. It sends to the bridge whose `browser` matches the frontmost app, and logs to `Log.bridge`.
 - **`NativeHostInstaller`** (new): on launch, writes or updates the host manifest for each installed browser whose support directory exists. It rewrites the manifest whenever the app path changes.
-- **`FocusPetBridge`** (new helper target): reads 4-byte little-endian length-prefixed JSON on stdin and writes newline JSON to the socket, and the reverse. Messages are capped at 1 MB (the Chrome limit for host→extension is 1 MB).
+- **`IntercedeBridge`** (new helper target): reads 4-byte little-endian length-prefixed JSON on stdin and writes newline JSON to the socket, and the reverse. Messages are capped at 1 MB (the Chrome limit for host→extension is 1 MB).
 - **Without the extension:** everything stays as it is now. The bridge simply has no connections.
 
 ## Extension layout
@@ -142,7 +142,7 @@ Extension/
 |---|---|---|
 | **0** | Answer D1–D4 | ✅ recommendations adopted |
 | **1** | `dev/harness.html` + `dissolve.js` ✅ built | The effect looks right in a plain page, including reduced-motion and the no-snapshot fallback |
-| **2** | Extension + `FocusPetBridge` + `BrowserBridge`, Chrome only ✅ built | **Test Nudge** on a YouTube tab: page holds on raise-hand, dissolves on the sweep, veil appears; other tabs untouched; nothing breaks if the app isn't running |
+| **2** | Extension + `IntercedeBridge` + `BrowserBridge`, Chrome only ✅ built | **Test Nudge** on a YouTube tab: page holds on raise-hand, dissolves on the sweep, veil appears; other tabs untouched; nothing breaks if the app isn't running |
 | **3** | Brave / Edge / Arc manifests, Firefox port | Same check in each browser |
 | **4** | Extension reports the active tab URL → `ActivityMonitor` prefers it over AppleScript/AX | Tracking works in Firefox, with no Automation prompt needed |
 | **5** | Strict mode (close tab), Safari Web Extension | Needs Xcode for Safari |
@@ -176,5 +176,5 @@ Checked in headless Chrome: media pauses on hold; scatter, cover, and reduced-mo
 
 - **Routing:** the app broadcasts every message to all connected helpers. Each extension acts only if one of its windows is focused and the active tab matches the host (for Test Nudge, which sends `test: true` and no `host`: any http(s) tab in the last-focused window). This replaces the "route to the frontmost browser" idea.
 - **Helper:** if the app isn't running, it keeps retrying the socket every 2 s and replays the extension's `hello` on connect. It also sends the extension `connected` / `appUnavailable`.
-- **Debug overrides:** `FOCUSPET_BRIDGE_SOCKET` overrides the socket path for both the app and the helper.
+- **Debug overrides:** `INTERCEDE_BRIDGE_SOCKET` overrides the socket path for both the app and the helper.
 - **Checked:** Swift tests cover line framing, the host installer, and a socket round-trip. End-to-end, a headless Chrome with the unpacked extension and the real helper against a stand-in app socket handled `hello`, `hold` (ack ok), and `dissolve` (ack ok, scatter mode).

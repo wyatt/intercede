@@ -1,18 +1,18 @@
-// FocusPet page dissolve: hold → dissolve → veil.
+// Intercede page dissolve: hold → dissolve → veil.
 //
 // Injected on demand by the extension's background worker (chrome.scripting.executeScript) into
 // the one tab being nudged, and loaded directly by dev/harness.html for tuning. Everything lives in
 // a closed shadow root at the top z-index so the page's CSS can't reach it.
 //
-//   FocusPetDissolve.hold()                 media pauses, page dims (pet raises his hand)
-//   await FocusPetDissolve.dissolve({...})  page breaks into pixels and drifts away (his sweep)
-//   FocusPetDissolve.release()              remove everything (no-op if nothing is showing)
+//   IntercedeDissolve.hold()                 media pauses, page dims (patron raises his hand)
+//   await IntercedeDissolve.dissolve({...})  page breaks into pixels and drifts away (his sweep)
+//   IntercedeDissolve.release()              remove everything (no-op if nothing is showing)
 (() => {
-  if (globalThis.FocusPetDissolve) return;  // injected twice into the same page
+  if (globalThis.IntercedeDissolve) return;  // injected twice into the same page
 
   const Z = 2147483647;
   const DEFAULTS = {
-    durationMs: 1200,     // ≈ the pet's dismiss + settle clips
+    durationMs: 1200,     // ≈ the patron's dismiss + settle clips
     tileSize: 8,          // CSS px
     goldFraction: 0.05,   // share of tiles that become golden sparkles
     tileLife: 0.35,       // fraction of the duration each tile spends drifting away
@@ -35,8 +35,8 @@
     .card.on { opacity: 1; transform: none; }
     .catchphrase { font-size: 1.5em; font-weight: 700; margin: 0 0 0.6em; }
     .phrase { margin: 0 0 0.4em; }
-    .pet { margin: 0 0 1.8em; color: #8A6A3A; font-size: 0.85em; }
-    .pet::before { content: "— "; }
+    .patron { margin: 0 0 1.8em; color: #8A6A3A; font-size: 0.85em; }
+    .patron::before { content: "— "; }
     button {
       font: inherit; font-size: 0.85em; color: #3B2A1A; background: transparent; cursor: pointer;
       border: 2px solid #3B2A1A; border-radius: 6px; padding: 0.45em 1.1em;
@@ -52,7 +52,7 @@
 
   function ensureHost() {
     if (host) return;
-    host = document.createElement('focuspet-dissolve');
+    host = document.createElement('intercede-dissolve');
     host.style.cssText = `position:fixed;inset:0;z-index:${Z};pointer-events:none;`;
     root = host.attachShadow({ mode: 'closed' });
     const style = document.createElement('style');
@@ -174,7 +174,7 @@
     });
   }
 
-  // Tiles leave in a sweep away from the bottom-left, where the pet stands, with some noise.
+  // Tiles leave in a sweep away from the bottom-left, where the patron stands, with some noise.
   function schedule(W, H, t, opts) {
     const diag = Math.hypot(W, H);
     const tiles = [];
@@ -200,7 +200,7 @@
     const size = t * (1 - 0.45 * q);
     const inset = (t - size) / 2;
     if (tile.gold) {
-      // Twinkling golden pixel, echoing the sparkles in the pet's dismiss animation.
+      // Twinkling golden pixel, echoing the sparkles in the patron's dismiss animation.
       f.globalAlpha = (1 - q) * (0.65 + 0.35 * Math.sin(q * 24));
       f.fillStyle = GOLD;
       const arm = size / 3;
@@ -244,10 +244,10 @@
     const layer = el('div', 'layer veil');
     const card = el('div', 'card');
     card.setAttribute('role', 'dialog');
-    card.setAttribute('aria-label', 'Page dismissed by your FocusPet');
+    card.setAttribute('aria-label', 'Page dismissed by your Intercede');
     if (opts.catchphrase) card.append(el('p', 'catchphrase', opts.catchphrase));
     if (opts.phrase) card.append(el('p', 'phrase', opts.phrase));
-    if (opts.petName) card.append(el('p', 'pet', opts.petName));
+    if (opts.patronName) card.append(el('p', 'patron', opts.patronName));
     const button = el('button', '', 'Return anyway');
     button.addEventListener('click', () => {
       release();
@@ -281,7 +281,7 @@
     try { await img.decode(); return img; } catch { return null; }  // fall back to cover mode
   }
 
-  globalThis.FocusPetDissolve = {
+  globalThis.IntercedeDissolve = {
     hold, dissolve, release,
     get state() { return state; },
     defaults: { ...DEFAULTS },
