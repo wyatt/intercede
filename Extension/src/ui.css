@@ -16,15 +16,15 @@
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #1e1628;      /* the hold's dim, deepened */
-    --panel: #2a2036;
+    --bg: #1f1b16;      /* warm ink */
+    --panel: #2a251e;
     --text: #f4ecd8;
     --muted: #b49a6a;
     --line: #f4ecd8;
-    --track: #3a2e48;
+    --track: #3a3329;
     --ok: #7cc45a;
     --over: #ff6a55;
-    --shadow: #0c0812;
+    --shadow: #0d0b09;
   }
 }
 
@@ -76,7 +76,7 @@ input, select {
 .site-head .used { font-variant-numeric: tabular-nums; }
 .site-head .used.over { color: var(--over); }
 /* A health bar: framed, filled in chunky segments. */
-.bar { height: 12px; border: 2px solid var(--line); background: var(--track); margin-top: 4px; padding: 1px; }
+.bar { height: 10px; background: var(--track); margin-top: 4px; padding: 1px; }
 .bar > div {
   height: 100%;
   background: repeating-linear-gradient(90deg, var(--ok) 0 6px, transparent 6px 8px);
