@@ -244,7 +244,7 @@
     const layer = el('div', 'layer veil');
     const card = el('div', 'card');
     card.setAttribute('role', 'dialog');
-    card.setAttribute('aria-label', 'Page dismissed by your Intercede');
+    card.setAttribute('aria-label', 'Page dismissed by your patron');
     if (opts.catchphrase) card.append(el('p', 'catchphrase', opts.catchphrase));
     if (opts.phrase) card.append(el('p', 'phrase', opts.phrase));
     if (opts.patronName) card.append(el('p', 'patron', opts.patronName));

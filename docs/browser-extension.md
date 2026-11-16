@@ -1,5 +1,7 @@
 # Browser Extension: Page Dissolve — Blueprint
 
+> **Superseded (v0.2):** the extension is now standalone — it tracks time, nudges, and dissolves the page itself, with no Mac app or native messaging. See *Standalone extension (v0.2)* at the end. The native-messaging design below is kept for reference; the Mac app's bridge (BrowserBridge, IntercedeBridge) no longer has a client.
+
 **Status:** decisions D1–D4 settled (recommendations adopted) · harness built · **Goal:** when the patron shows up on a distracting site, the page itself reacts — it holds still while he raises his hand, then dissolves into pixels as he sweeps it away.
 
 The native app already knows *when* (budget breach → nudge) and *what site*. It can't touch page content, though: AppleScript can read a tab's URL but can't run an effect on the page. A browser extension can. This doc covers the effect, how the app and extension talk, and a phased build plan.
@@ -178,3 +180,20 @@ Checked in headless Chrome: media pauses on hold; scatter, cover, and reduced-mo
 - **Helper:** if the app isn't running, it keeps retrying the socket every 2 s and replays the extension's `hello` on connect. It also sends the extension `connected` / `appUnavailable`.
 - **Debug overrides:** `INTERCEDE_BRIDGE_SOCKET` overrides the socket path for both the app and the helper.
 - **Checked:** Swift tests cover line framing, the host installer, and a socket round-trip. End-to-end, a headless Chrome with the unpacked extension and the real helper against a stand-in app socket handled `hello`, `hold` (ack ok), and `dissolve` (ack ok, scatter mode).
+
+---
+
+## Standalone extension (v0.2)
+
+Everything runs in the extension:
+
+| Piece | File | Notes |
+|---|---|---|
+| Usage rules | `src/tracker.js` | Pure functions ported from `UsageTracker.swift`: subdomains count toward their site, most specific site wins, 5-minute breach cooldown, local calendar days. Tested in Node (`make ext-test`). |
+| Patrons | `src/patrons.js`, `patrons/*.png` | Mirrors `Patron.swift` (a test keeps them in sync). `make sprites` copies packed sheets into `Extension/patrons/`. |
+| Tracking + nudges | `src/background.js` | Event-driven: tab activation, URL changes, window focus, screen lock close the current interval (kept in `storage.session`) and credit it. A 1-minute alarm flushes; gaps over 90 s aren't credited (sleep). `idle` is ignored so watching videos counts. |
+| The patron | `src/patron.js` | Injected on demand. Same beats and timings as the Mac app: walk in → idle → raise hand (`hold`) → speak 1.5 s → sweep (`dissolve`) → lower hand → wait for a click or 45 s → walk out. Only the sprite and bubble take clicks. He's hidden for the instant the page is snapshotted, then stays above the veil. |
+| Dissolve | `src/dissolve.js` | Unchanged from phase 1. |
+| UI | `popup.html`, `options.html` | Today's usage + Test Nudge; sites (typed limits) + patron picker. Settings in `storage.sync`, usage in `storage.local` (`usage:YYYY-MM-DD`). |
+
+Checked in headless Chrome: with a 3-second budget on a local page, real tracking credited the time and triggered the nudge on its own; the patron walked in (sprite x −136 → 24 px over 1.6 s), the page's video paused at the raised hand, the dissolve ran on the sweep, and no console errors.

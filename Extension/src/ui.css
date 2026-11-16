@@ -1,0 +1,61 @@
+/* Shared styles for the popup and the settings page. System font; follows light/dark mode. */
+:root {
+  --bg: #ffffff;
+  --panel: #f5f5f7;
+  --text: #1d1d1f;
+  --muted: #6e6e73;
+  --line: #d2d2d7;
+  --track: #e5e5ea;
+  --ok: #34c759;
+  --over: #ff3b30;
+  --accent: #b8860b;
+  --accent-soft: #f6ecd1;
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1c1c1e;
+    --panel: #2c2c2e;
+    --text: #f5f5f7;
+    --muted: #98989d;
+    --line: #3a3a3c;
+    --track: #3a3a3c;
+    --accent: #e8c15a;
+    --accent-soft: #3a3324;
+  }
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 13px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+}
+button, input, select { font: inherit; color: inherit; }
+button {
+  cursor: pointer;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  border-radius: 6px;
+  padding: 4px 10px;
+}
+button:hover { border-color: var(--muted); }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+input, select {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--bg);
+  padding: 4px 8px;
+}
+.muted { color: var(--muted); }
+
+/* ── Usage bars (popup) ── */
+.site { margin-bottom: 12px; }
+.site-head { display: flex; gap: 6px; align-items: baseline; }
+.site-head .host { flex: 1; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.site-head .used { font-variant-numeric: tabular-nums; }
+.site-head .used.over { color: var(--over); }
+.bar { height: 6px; border-radius: 3px; background: var(--track); overflow: hidden; margin-top: 4px; }
+.bar > div { height: 100%; background: var(--ok); border-radius: 3px; }
+.bar > div.over { background: var(--over); }

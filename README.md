@@ -16,6 +16,17 @@ When you spend too long on a tracked site (YouTube, Reddit, etc.), St. Alphonsus
 
 ---
 
+## Chrome extension (standalone)
+
+`Extension/` is a complete, standalone version of Intercede for Chrome — no Mac app, helper, or macOS permissions needed. It tracks time on your sites, and when one runs over its daily limit your patron walks onto the page, raises a hand (the page pauses and dims), speaks, and sweeps the page away into pixels, leaving a calm veil with a **Return anyway** button.
+
+- **Install:** open `chrome://extensions`, turn on **Developer mode**, click **Load unpacked**, and choose the `Extension/` folder (or click the reload icon if it's already loaded). Settings open on first install.
+- **Popup** (toolbar icon): today's time per site against its limit, and **Test Nudge**.
+- **Settings:** tracked sites with typed daily limits (1–1440 minutes), and your patron.
+- **Tracking** is event-driven: the active tab of a focused Chrome window counts; switching tabs/apps or locking the screen stops the clock. Watching a video without touching anything still counts.
+- **Tests:** `make ext-test` (Node) for the usage rules and patron data; `Extension/dev/harness.html` for tuning the dissolve effect.
+- If you also run the Mac app, quit it: both would nudge you.
+
 ## Current Features (v0.1)
 
 - **Activity tracking** — real elapsed-time accumulation, AppleScript URL extraction (Chrome, Safari, Arc, Brave, Edge), AX API fallback
@@ -49,10 +60,8 @@ Currently only **easy mode** (single tap dismisses). Planned:
 ### Richer Sprite System
 - Idle animations when patron is not nudging (lives in corner of screen)
 
-### Browser Extension (for Insane Mode)
-See [docs/browser-extension.md](docs/browser-extension.md) for the blueprint (page hold + pixel dissolve synced to the patron's gesture). The effect itself is built: open `Extension/dev/harness.html` in Chrome to try it (keys: N simulate nudge, H hold, D dissolve, R reset).
-
-**Installing the extension (Chrome):** run the app once (`make app` or `make run`) so it registers its native-messaging host, then open `chrome://extensions`, turn on **Developer mode**, click **Load unpacked**, and choose the `Extension/` folder. The ID should be `bminoilbndphincaaooginfkcjamaadc`. When a nudge fires on a tracked site, the page holds as the patron raises his hand and dissolves on his sweep; **Test Nudge** targets whatever web page is active in Chrome.
+### Close-tab ("Insane") mode
+An opt-in strict mode where the patron closes the tab instead of leaving the veil.
 - Chrome/Safari extension that receives close-tab commands from the native app
 - Communicates via native messaging or local loopback
 - Required for reliable URL detection on browsers that don't expose URLs via AppleScript

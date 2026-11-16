@@ -6,7 +6,7 @@ BUILD_DIR = $(DERIVED)/Build/Products/Debug
 INSTALL_DIR = $(HOME)/Applications
 XCODEBUILD = xcodebuild -project $(APP_NAME).xcodeproj -scheme $(SCHEME) -configuration Debug -derivedDataPath $(DERIVED)
 
-.PHONY: generate build test install run app clean reset-tcc sprites icon
+.PHONY: generate build test ext-test install run app clean reset-tcc sprites icon
 
 # Regenerate the Xcode project from project.yml (needed after adding/removing files)
 generate:
@@ -28,6 +28,10 @@ install: build
 run: install
 	open $(INSTALL_DIR)/$(APP_NAME).app
 
+# Chrome extension unit tests (Node 18+)
+ext-test:
+	node --test Extension/test/*.test.mjs
+
 # Build + install + launch without Xcode (Command Line Tools only)
 app:
 	tools/build-app.sh
@@ -38,6 +42,7 @@ sprites:
 	@for src in Art/*-source.png; do \
 		name=$$(basename "$$src" -source.png); \
 		swift tools/pack-sprite.swift "$$src" "Intercede/Resources/Patrons/$$name.png" 6,4,6,6,6,4,6 | tail -1; \
+		mkdir -p Extension/patrons && cp "Intercede/Resources/Patrons/$$name.png" Extension/patrons/; \
 		grep -q "sheetName: \"$$name\"" Intercede/Patrons/Patron.swift || \
 			echo "warning: no patron uses '$$name' (sheetName in Intercede/Patrons/Patron.swift) — misspelled file name?"; \
 	done

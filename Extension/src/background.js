@@ -1,171 +1,139 @@
-// Intercede extension background worker.
+// Intercede background worker: tracks time on distracting sites and sends a patron when a site's
+// daily budget runs out.
 //
-// Holds a Native Messaging port to the Intercede app (via the IntercedeBridge helper) and turns its
-// nudge beats into page effects on exactly one tab:
-//   hold     → pause media, dim           (patron raises his hand)
-//   dissolve → snapshot + pixel dissolve   (patron sweeps it away), then the veil
-//   release  → undo a hold that never became a dissolve
-// The app broadcasts to every connected browser; each acts only if one of its windows is focused
-// and its active tab is on the nudged site (or any site, for Test Nudge).
+// Tracking is event-driven, because MV3 workers are suspended when idle and can't keep timers.
+// The "current interval" (which tab/site has the user's attention, and since when) lives in
+// storage.session; every change of attention (tab switch, navigation, window focus, screen lock)
+// closes it and credits the elapsed time. A one-minute alarm flushes it periodically, which also
+// caps how much time an unobserved gap (e.g. the Mac sleeping) can add.
 
-const HOST_NAME = 'com.intercede.bridge';
-const PROTOCOL = 1;
-const RECONNECT_MIN_MS = 2000;
-const RECONNECT_MAX_MS = 60000;
+import { DEFAULT_SITES, credit, dayKey } from './tracker.js';
+import { LAYOUT, patronFor, randomPhrase, DEFAULT_PATRON } from './patrons.js';
 
-let port = null;
-let reconnectDelay = RECONNECT_MIN_MS;
-let reconnectTimer = null;
-const nudgeTabs = new Map();  // nudgeId → tabId, so release/dissolve hit the tab that was held
+const FLUSH_MINUTES = 1;
+const MAX_INTERVAL_S = 90;  // longer than this between flushes means we weren't observing
 
-// ── Connection ───────────────────────────────────────────────────────────────
+// ── Storage ──────────────────────────────────────────────────────────────────
 
-function connect() {
-  if (port) return;
-  clearTimeout(reconnectTimer);
-  try {
-    port = chrome.runtime.connectNative(HOST_NAME);
-  } catch (e) {
-    console.warn('[intercede] connectNative threw', e);
-    return scheduleReconnect();
-  }
-  port.onMessage.addListener(onAppMessage);
-  port.onDisconnect.addListener(() => {
-    console.warn('[intercede] bridge disconnected:', chrome.runtime.lastError?.message);
-    port = null;
-    scheduleReconnect();
-  });
-  send({ type: 'hello', browser: browserName(), extensionVersion: chrome.runtime.getManifest().version });
+async function settings() {
+  const { sites, patron } = await chrome.storage.sync.get(['sites', 'patron']);
+  return { sites: sites ?? DEFAULT_SITES, patron: patron ?? DEFAULT_PATRON };
 }
 
-function scheduleReconnect() {
-  clearTimeout(reconnectTimer);
-  reconnectTimer = setTimeout(connect, reconnectDelay);
-  reconnectDelay = Math.min(reconnectDelay * 2, RECONNECT_MAX_MS);
+const usageKey = date => `usage:${dayKey(date)}`;
+
+// ── Attention tracking ───────────────────────────────────────────────────────
+
+// Serialize all state changes: chrome.* calls are async and events can arrive together.
+let queue = Promise.resolve();
+const serial = fn => (queue = queue.then(fn).catch(e => console.warn('[intercede]', e)));
+
+/** Which site has the user's attention right now: the active tab of a focused Chrome window. */
+async function attention() {
+  const { locked } = await chrome.storage.session.get('locked');
+  if (locked) return null;
+  const win = await chrome.windows.getLastFocused().catch(() => null);
+  if (!win?.focused) return null;
+  const [tab] = await chrome.tabs.query({ active: true, windowId: win.id });
+  if (!tab?.url || !/^https?:/.test(tab.url)) return null;
+  return { tabId: tab.id, host: new URL(tab.url).hostname };
 }
 
-function send(message) {
-  try { port?.postMessage({ v: PROTOCOL, ...message }); } catch (e) { console.warn('[intercede] send failed', e); }
+/** Credit the open interval up to now and keep it open. */
+async function flush(now = Date.now()) {
+  const { current } = await chrome.storage.session.get('current');
+  if (!current) return;
+  const seconds = Math.min((now - current.since) / 1000, MAX_INTERVAL_S);
+  await chrome.storage.session.set({ current: { ...current, since: now } });
+  await creditTime(current.host, current.tabId, seconds, new Date(now));
 }
 
-function browserName() {
-  const brands = navigator.userAgentData?.brands?.map(b => b.brand) ?? [];
-  return ['Brave', 'Microsoft Edge', 'Opera', 'Google Chrome', 'Chromium'].find(b => brands.includes(b)) ?? 'Chromium';
+/** Close the open interval and start a new one for whatever has attention now. */
+async function refresh() {
+  await flush();
+  const next = await attention();
+  await chrome.storage.session.set({ current: next ? { ...next, since: Date.now() } : null });
 }
 
-// The open port keeps this worker alive; these cover browser start and the worker being evicted.
-chrome.runtime.onStartup.addListener(connect);
-chrome.runtime.onInstalled.addListener(connect);
-chrome.alarms.create('intercede-keepalive', { periodInMinutes: 1 });
-chrome.alarms.onAlarm.addListener(() => connect());
-connect();
-
-// ── App → page ───────────────────────────────────────────────────────────────
-
-async function onAppMessage(msg) {
-  if (msg?.v !== PROTOCOL) return;
-  if (msg.type === 'connected') { reconnectDelay = RECONNECT_MIN_MS; return; }
-  if (msg.type === 'appUnavailable') return;  // helper keeps retrying the app on its own
-  try {
-    if (msg.type === 'hold') await onHold(msg);
-    else if (msg.type === 'dissolve') await onDissolve(msg);
-    else if (msg.type === 'release') await onRelease(msg);
-  } catch (e) {
-    ack(msg, false, String(e?.message ?? e));
-  }
+async function creditTime(host, tabId, seconds, now) {
+  const { sites } = await settings();
+  const key = usageKey(now);
+  const stored = await chrome.storage.local.get([key, 'lastBreach']);
+  const result = credit({ usage: stored[key], sites, host, seconds, now: now.getTime(), lastBreach: stored.lastBreach ?? {} });
+  await chrome.storage.local.set({ [key]: result.usage, lastBreach: result.lastBreach });
+  if (result.breach) nudge(tabId, result.breach.host);
 }
 
-async function onHold(msg) {
-  const tab = await targetTab(msg);
-  if (!tab) return ack(msg, false, 'no matching focused tab');
-  nudgeTabs.set(msg.nudgeId, tab.id);
-  await inject(tab.id);
-  const [{ result }] = await chrome.scripting.executeScript({
-    target: { tabId: tab.id },
-    func: () => IntercedeDissolve.hold(),
-  });
-  ack(msg, true, `paused ${result?.paused ?? 0} media`);
-}
-
-async function onDissolve(msg) {
-  // Dissolve the tab we held if there was one; otherwise find a target now (e.g. hold was skipped).
-  let tabId = nudgeTabs.get(msg.nudgeId);
-  if (tabId === undefined) {
-    const tab = await targetTab(msg);
-    if (!tab) return ack(msg, false, 'no matching focused tab');
-    tabId = tab.id;
-    nudgeTabs.set(msg.nudgeId, tabId);
-  }
-  const tab = await chrome.tabs.get(tabId).catch(() => null);
-  if (!tab?.active) return ack(msg, false, 'held tab is gone or no longer active');
-
-  await inject(tabId);
-  // Snapshot what's on screen right now (dimmed by hold) so the dissolve starts seamlessly.
-  const snapshot = await chrome.tabs.captureVisibleTab(tab.windowId, { format: 'jpeg', quality: 85 })
-    .catch(e => { console.warn('[intercede] capture failed, using cover mode', e); return null; });
-
-  const [{ result }] = await chrome.scripting.executeScript({
-    target: { tabId },
-    args: [{
-      snapshot,
-      durationMs: msg.durationMs,
-      patronName: msg.patronName,
-      catchphrase: msg.catchphrase,
-      phrase: msg.phrase,
-      nudgeId: msg.nudgeId,
-      host: msg.host,
-    }],
-    func: async options => IntercedeDissolve.dissolve({
-      ...options,
-      onReturn: () => chrome.runtime.sendMessage({ type: 'returnAnyway', nudgeId: options.nudgeId, host: options.host }),
-    }),
-  });
-  nudgeTabs.delete(msg.nudgeId);
-  ack(msg, !!result?.ok, result?.reason ?? result?.mode);
-}
-
-async function onRelease(msg) {
-  const tabId = nudgeTabs.get(msg.nudgeId);
-  nudgeTabs.delete(msg.nudgeId);
-  if (tabId === undefined) return;
-  await chrome.scripting.executeScript({
-    target: { tabId },
-    func: () => globalThis.IntercedeDissolve?.release(),
-  }).catch(() => {});
-  ack(msg, true, 'released');
-}
-
-function ack(msg, ok, reason) {
-  send({ type: 'ack', nudgeId: msg.nudgeId, for: msg.type, ok, reason });
-}
-
-// ── Page → app ───────────────────────────────────────────────────────────────
-
-chrome.runtime.onMessage.addListener((message, sender) => {
-  if (sender.id !== chrome.runtime.id || message?.type !== 'returnAnyway') return;
-  send({ type: 'returnAnyway', nudgeId: message.nudgeId, host: message.host });
+chrome.tabs.onActivated.addListener(() => serial(refresh));
+chrome.tabs.onUpdated.addListener((_id, change, tab) => { if (change.url && tab.active) serial(refresh); });
+chrome.windows.onFocusChanged.addListener(() => serial(refresh));
+chrome.idle.onStateChanged.addListener(state => serial(async () => {
+  // Only a locked screen pauses tracking. "idle" (no input) is ignored: watching a video is idle.
+  if (state === 'idle') return;
+  if (state === 'locked') { await flush(); await chrome.storage.session.set({ locked: true, current: null }); }
+  else { await chrome.storage.session.set({ locked: false }); await refresh(); }
+}));
+chrome.alarms.create('intercede-flush', { periodInMinutes: FLUSH_MINUTES });
+chrome.alarms.onAlarm.addListener(alarm => { if (alarm.name === 'intercede-flush') serial(refresh); });
+chrome.runtime.onStartup.addListener(() => serial(refresh));
+chrome.runtime.onInstalled.addListener(async ({ reason }) => {
+  if (reason === 'install') chrome.runtime.openOptionsPage();
+  serial(refresh);
 });
 
-// ── Targeting ────────────────────────────────────────────────────────────────
+// ── Nudges ───────────────────────────────────────────────────────────────────
 
-// The active tab of this browser's focused window, if it's on the nudged site. Test nudges accept
-// any web page and the last-focused window, since clicking the menu bar takes focus away.
-async function targetTab(msg) {
-  const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
-  if (!tab?.url || !/^https?:/.test(tab.url)) return null;
-  if (msg.test) return tab;
-  const win = await chrome.windows.get(tab.windowId);
-  if (!win.focused) return null;
-  return hostMatches(new URL(tab.url).hostname, msg.host) ? tab : null;
+const presenting = new Set();  // tab ids with a patron on screen
+
+/** Sends the selected patron onto `tabId`. `host` is the site over budget, or null for a test. */
+async function nudge(tabId, host) {
+  if (presenting.has(tabId)) return;
+  const tab = await chrome.tabs.get(tabId).catch(() => null);
+  if (!tab?.url || !/^https?:/.test(tab.url)) return;  // Chrome's own pages can't be scripted
+  const patron = patronFor((await settings()).patron);
+  presenting.add(tabId);
+  try {
+    await chrome.scripting.executeScript({ target: { tabId }, files: ['src/dissolve.js', 'src/patron.js'] });
+    await chrome.scripting.executeScript({
+      target: { tabId },
+      args: [{
+        sheetUrl: chrome.runtime.getURL(`patrons/${patron.sheet}.png`),
+        layout: LAYOUT,
+        name: patron.name,
+        catchphrase: patron.catchphrase,
+        phrase: randomPhrase(patron, host),
+      }],
+      func: options => { IntercedePatron.present(options); },
+    });
+  } catch (e) {
+    presenting.delete(tabId);
+    console.warn('[intercede] could not nudge tab', tabId, e);
+  }
 }
 
-// Same rule as UsageTracker: case-insensitive, ignore "www.", subdomains count.
-function hostMatches(tabHost, siteHost) {
-  const norm = h => (h || '').toLowerCase().replace(/^www\./, '');
-  const t = norm(tabHost), s = norm(siteHost);
-  return !!s && (t === s || t.endsWith('.' + s));
-}
+chrome.tabs.onRemoved.addListener(tabId => presenting.delete(tabId));
 
-async function inject(tabId) {
-  await chrome.scripting.executeScript({ target: { tabId }, files: ['src/dissolve.js'] });
-}
+chrome.runtime.onMessage.addListener((message, sender, reply) => {
+  if (sender.id !== chrome.runtime.id) return;
+  switch (message?.type) {
+    case 'testNudge':  // from the popup: the active tab of the window it was opened from
+      chrome.tabs.query({ active: true, lastFocusedWindow: true }).then(([tab]) => tab && nudge(tab.id, null));
+      return;
+    case 'capture':  // from the page: snapshot it for the dissolve (only the extension can)
+      chrome.tabs.captureVisibleTab(sender.tab.windowId, { format: 'jpeg', quality: 85 })
+        .then(reply, () => reply(null));
+      return true;  // reply asynchronously
+    case 'flush':  // the popup is opening: bring today's numbers up to date
+      serial(refresh);
+      return;
+    case 'patronDone':
+      presenting.delete(sender.tab?.id);
+      return;
+    case 'returnAnyway':
+      console.info('[intercede] return anyway on', sender.tab?.url);
+      return;
+  }
+});
+
+// Debug handle for the service worker console / automated checks.
+globalThis.intercede = { refresh: () => serial(refresh), nudge };

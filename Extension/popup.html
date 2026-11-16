@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Intercede</title>
+<link rel="stylesheet" href="src/ui.css">
+<style>
+  body { width: 290px; }
+  header { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--panel); }
+  h1 { font-size: 14px; margin: 0; letter-spacing: .02em; }
+  .icon-button { border: none; background: none; padding: 2px; color: var(--muted); display: flex; }
+  .icon-button:hover { color: var(--text); }
+  main { padding: 14px 14px 4px; max-height: 340px; overflow-y: auto; }
+  h2 { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 10px; }
+  footer { display: flex; justify-content: space-between; align-items: center; padding: 8px 14px 12px; border-top: 1px solid var(--line); }
+  .patron { font-size: 12px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Intercede</h1>
+  <button class="icon-button" id="settings" title="Settings" aria-label="Settings">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.4 13a7.6 7.6 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.4 7.4 0 0 0-1.7-1L15 3.3h-4l-.4 2.6a7.4 7.4 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.6 7.6 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1c.5.4 1.1.7 1.7 1l.4 2.6h4l.4-2.6c.6-.3 1.2-.6 1.7-1l2.5 1 2-3.5zM12 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"/></svg>
+  </button>
+</header>
+<main>
+  <h2>Today</h2>
+  <div id="stats"></div>
+</main>
+<footer>
+  <span class="patron muted" id="patron"></span>
+  <button id="test">Test Nudge</button>
+</footer>
+<script type="module" src="src/popup.js"></script>
+</body>
+</html>
