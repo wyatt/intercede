@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Promo tile</title>
+<!-- The Chrome Web Store small promo tile (440×280), rendered to store/promo-tile-440x280.png. -->
+<style>
+  html, body { margin: 0; width: 440px; height: 280px; overflow: hidden; }
+  body {
+    position: relative; background: #f4ecd8; color: #3b2a1a;
+    font: 800 46px/1 ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  .speck { position: absolute; width: 24px; height: 24px; background: #e9dcbc; }
+  h1 { position: absolute; top: 34px; left: 0; right: 0; margin: 0; text-align: center; font-size: 46px; letter-spacing: .02em; }
+  p { position: absolute; top: 92px; left: 0; right: 0; margin: 0; text-align: center; font-size: 14px; font-weight: 600; color: #8a6a3a; }
+  .saints { position: absolute; left: 0; right: 0; bottom: 14px; display: flex; justify-content: center; align-items: flex-end; gap: 6px; }
+  .saint { width: 71px; height: 84px; background-repeat: no-repeat; image-rendering: pixelated; }
+  .saint.big { width: 102px; height: 120px; }
+</style>
+</head>
+<body>
+  <i class="speck" style="left:28px;top:24px"></i><i class="speck" style="left:52px;top:48px"></i>
+  <i class="speck" style="left:372px;top:20px"></i><i class="speck" style="left:396px;top:-4px"></i>
+  <i class="speck" style="left:16px;top:150px"></i><i class="speck" style="left:404px;top:140px"></i>
+  <h1>Intercede</h1>
+  <p>A patron saint for your browser</p>
+  <div class="saints" id="saints"></div>
+<script type="module">
+  import { PATRONS, LAYOUT } from './ext/patrons.js';
+  const order = ['isidore', 'clare', 'liguori', 'benedict', 'aquinas'];
+  for (const slug of order) {
+    const p = PATRONS.find(x => x.slug === slug), big = slug === 'liguori';
+    const h = big ? 120 : 84, k = h / LAYOUT.frameHeight, el = document.createElement('div');
+    el.className = 'saint' + (big ? ' big' : '');
+    el.style.backgroundImage = `url(ext/patrons/${p.sheet}.png)`;
+    el.style.backgroundSize = `${LAYOUT.cols * LAYOUT.frameWidth * k}px ${LAYOUT.rows * LAYOUT.frameHeight * k}px`;
+    el.style.backgroundPosition = `0 ${-LAYOUT.clips.idle.row * LAYOUT.frameHeight * k}px`;
+    document.getElementById('saints').append(el);
+  }
+</script>
+</body>
+</html>
