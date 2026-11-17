@@ -46,7 +46,7 @@
 
   /* Hero */
   .hero { padding: 64px 0 0; text-align: center; }
-  .hero img { width: 112px; height: 112px; }
+  .hero > img { width: 112px; height: 112px; }
   .hero h1 { font-size: clamp(44px, 9vw, 76px); line-height: 1; margin: 12px 0 14px; letter-spacing: .02em; }
   .tagline { font-size: clamp(18px, 3vw, 22px); font-weight: 700; margin: 0 0 12px; }
   .hero .sub { margin-bottom: 30px; }
@@ -60,9 +60,9 @@
   .dots i { width: 12px; height: 12px; border: 2px solid var(--line); background: var(--panel); }
   .dots i:first-child { background: #e0705a; } .dots i:nth-child(2) { background: var(--accent); } .dots i:last-child { background: #7cbf5a; }
   .url { flex: 1; padding: 4px 10px; font-size: 13px; background: var(--panel); border: 2px solid var(--line); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-  .ext-icon { width: 22px; height: 22px; }
-  .viewport { position: relative; aspect-ratio: 960 / 600; overflow: hidden; background: #0f0f0f; }
-  .viewport iframe { position: absolute; top: 0; left: 0; width: 960px; height: 600px; border: 0; transform-origin: 0 0; }
+  .ext-icon { flex: none; width: 20px; height: 20px; }
+  .viewport { position: relative; aspect-ratio: 960 / 557; overflow: hidden; background: #0f0f0f; }
+  .viewport iframe { position: absolute; top: 0; left: 0; width: 960px; height: 557px; border: 0; transform-origin: 0 0; }
   .caption { text-align: center; font-size: 13px; color: var(--muted); margin: 14px 0 0; }
 
   /* Steps */
@@ -72,18 +72,17 @@
   .step h3 { font-size: 18px; margin: 0 0 8px; }
   .step p { margin: 0; font-size: 14px; }
 
-  /* Patrons */
-  .patrons { display: grid; grid-template-columns: repeat(auto-fit, minmax(176px, 1fr)); gap: 20px; }
-  .patron { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 18px 14px 16px; }
-  .patron .sprite { width: 127px; height: 150px; background-repeat: no-repeat; }
-  .patron h3 { font-size: 15px; margin: 10px 0 6px; }
-  .patron p { font-size: 13px; margin: 0 0 14px; flex: 1; }
-  .patron button {
-    font: 700 12px/1 var(--mono); text-transform: uppercase; padding: 8px 12px; cursor: pointer; color: #3b2a1a;
-    background: var(--accent); border: 2px solid var(--line);
+  /* Patrons: a lineup under the demo */
+  .patrons { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 12px; margin: 22px auto 0; max-width: 960px; }
+  .patron {
+    display: flex; flex-direction: column; align-items: center; width: 150px; padding: 0 0 6px; cursor: pointer;
+    font: inherit; color: inherit; text-align: center; background: none; border: none;
   }
-  .patron button:hover { filter: brightness(1.06); }
-  .patron.on { background: #fff3cf; }
+  .patron .sprite { width: 127px; height: 150px; background-repeat: no-repeat; transition: transform 120ms steps(2); }
+  .patron:hover .sprite { transform: translateY(-4px); }
+  .patron b { font-size: 13px; line-height: 1.3; margin-top: 4px; }
+  .patron span { font-size: 12px; line-height: 1.35; color: var(--muted); margin-top: 3px; }
+  .patron.on b { text-decoration: underline 3px var(--accent); text-underline-offset: 4px; }
 
   /* Install */
   .install { max-width: 640px; margin: 0 auto; padding: 24px 28px; }
@@ -117,14 +116,15 @@
   <div class="browser frame" id="demo">
     <div class="browser-bar">
       <div class="dots" aria-hidden="true"><i></i><i></i><i></i></div>
-      <div class="url">scrollscape.com/watch?v=cat-video-47</div>
+      <div class="url">youtube.com/watch?v=funny-cats-2025</div>
       <img class="ext-icon pixel" src="ext/icon-32.png" alt="Intercede extension">
     </div>
     <div class="viewport" id="viewport">
-      <iframe id="demo-frame" src="demo.html" title="Live demo: a patron sweeps away a video site" loading="lazy"></iframe>
+      <iframe id="demo-frame" src="demo.html" title="Live demo: a patron sweeps away YouTube" loading="lazy"></iframe>
     </div>
   </div>
-  <p class="caption">Live demo, running the extension's real code. Pick a saint below to send them in.</p>
+  <div class="patrons" id="patrons"></div>
+  <p class="caption">Live demo, running the extension's real code. Click a saint to send them in.</p>
 </header>
 
 <main class="wrap">
@@ -148,12 +148,6 @@
         <p>"Return anyway" unlocks after a short countdown. Stay over your limit and they'll come back to check on you.</p>
       </div>
     </div>
-  </section>
-
-  <section aria-labelledby="patrons-title">
-    <h2 id="patrons-title">Meet the patrons</h2>
-    <p class="sub">Choose the saint who keeps you honest. Each has their own things to say.</p>
-    <div class="patrons" id="patrons"></div>
   </section>
 
   <section aria-labelledby="install-title" id="install">
@@ -183,19 +177,20 @@
   const viewport = document.getElementById('viewport'), frame = document.getElementById('demo-frame');
   new ResizeObserver(() => { frame.style.transform = `scale(${viewport.clientWidth / 960})`; }).observe(viewport);
 
-  // Patron cards, each idling.
+  // The patrons stand in a row under the demo, idling; click one to send them in.
   const scale = 150 / LAYOUT.frameHeight;
   const cards = PATRONS.map(patron => {
-    const card = document.createElement('article');
-    card.className = 'patron frame';
-    card.innerHTML = '<div class="sprite" role="img"></div><h3></h3><p></p><button type="button">Send in ▸</button>';
+    const card = document.createElement('button');
+    card.type = 'button';
+    card.className = 'patron';
+    card.title = `Send ${patron.name} in`;
+    card.innerHTML = '<div class="sprite" aria-hidden="true"></div><b></b><span></span>';
     const sprite = card.querySelector('.sprite');
-    sprite.setAttribute('aria-label', patron.name);
     sprite.style.backgroundImage = `url("ext/patrons/${patron.sheet}.png")`;
     sprite.style.backgroundSize = `${LAYOUT.cols * LAYOUT.frameWidth * scale}px ${LAYOUT.rows * LAYOUT.frameHeight * scale}px`;
-    card.querySelector('h3').textContent = patron.name;
-    card.querySelector('p').textContent = `“${patron.catchphrase}”`;
-    card.querySelector('button').addEventListener('click', () => {
+    card.querySelector('b').textContent = patron.name;
+    card.querySelector('span').textContent = `“${patron.catchphrase}”`;
+    card.addEventListener('click', () => {
       frame.contentWindow.postMessage({ type: 'play', patron: patron.slug }, location.origin === 'null' ? '*' : location.origin);
       document.getElementById('demo').scrollIntoView({ behavior: 'smooth', block: 'center' });
     });
