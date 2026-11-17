@@ -12,7 +12,7 @@
   --accent: #e8c15a;    /* gold */
   --shadow: #3b2a1a;
   --dither: #e2d3ae;    /* parchment, a shade darker */
-  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --mono: ui-monospace, "SF Mono", Menlo, "Cascadia Mono", Consolas, monospace;
   color-scheme: light dark;
 }
 @media (prefers-color-scheme: dark) {

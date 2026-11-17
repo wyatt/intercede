@@ -23,7 +23,7 @@
       position: absolute; bottom: ${BOTTOM + SPRITE_HEIGHT + 4}px; max-width: 340px; box-sizing: border-box;
       padding: 8px 12px; background: #fff; color: #000; border: 2px solid #000; border-radius: 8px;
       box-shadow: 2px 2px 4px rgba(0,0,0,.2); pointer-events: auto; cursor: pointer;
-      font: 500 12px/1.4 ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+      font: 500 12px/1.4 ui-monospace, "SF Mono", Menlo, "Cascadia Mono", Consolas, monospace;
       opacity: 0; transform: scale(.8); transform-origin: bottom left;
       transition: opacity 250ms ease, transform 250ms cubic-bezier(.3, 1.4, .5, 1);
     }
