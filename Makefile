@@ -47,7 +47,7 @@ sprites:
 			echo "warning: no patron uses '$$name' (sheetName in Intercede/Patrons/Patron.swift) — misspelled file name?"; \
 	done
 
-# Rebuild the app and extension icons (pixel-art hand of God, after Michelangelo)
+# Rebuild the app and extension icons from Art/icon-source.png
 icon:
 	swift tools/make-icon.swift Intercede/Resources/AppIcon.icns Extension/icons
 

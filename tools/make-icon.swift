@@ -1,8 +1,9 @@
-// Builds the app and extension icons: God's hand from Michelangelo's *Creation of Adam*, reaching
-// left with the spark of life at his fingertip, in pixel art against a night sky. The scene is a
-// 32×32 grid drawn as hard-edged blocks (to match the pixel-art patrons), rendered at 1024 px and
-// scaled down for the smaller sizes. Writes an .iconset and converts it with iconutil, and with a
-// second argument also writes the extension's icon-{16,32,48,128}.png there.
+// Builds the app and extension icons from Art/icon-source.png: a square image with the artwork in
+// a rounded square on a dark background (as image generators tend to give it). The rounded square
+// is found automatically, cut out a few pixels inside its edge (so none of the dark background
+// fringes it), and placed on the macOS icon grid with a soft shadow, at 1024 px and scaled down
+// for the smaller sizes. Writes an .iconset and converts it with iconutil, and with a second
+// argument also writes the extension's icon-{16,32,48,128}.png there.
 //
 // usage: swift tools/make-icon.swift <out.icns> [extension-icons-dir]
 import CoreGraphics
@@ -14,58 +15,10 @@ guard (2...3).contains(CommandLine.arguments.count) else {
     print("usage: make-icon.swift <out.icns> [extension-icons-dir]"); exit(1)
 }
 
-typealias RGB = (r: Int, g: Int, b: Int)
-let skyTop: RGB = (22, 34, 72), skyBottom: RGB = (58, 88, 140)
-let star: RGB = (200, 214, 240)
-let gold: RGB = (232, 193, 90), spark: RGB = (255, 248, 220)
-let outline: RGB = (70, 40, 34)
-let skin: RGB = (240, 196, 150), skinShade: RGB = (204, 148, 108)
-let robe: RGB = (198, 136, 168), robeShade: RGB = (150, 94, 130)
-let hills: RGB = (20, 32, 62)  // the squircle's base colour, under its drop shadow
-
-let grid = 32
-
-// The hand, from row 9 down. O outline, S/s skin lit/shaded, R/r robe lit/shaded, . sky.
-let handTop = 9
-let hand: [String] = [
-    ".........................OOOOOOO",
-    "........................ORRRRRRR",
-    "..................OOOOOOORRRRRRR",
-    "................OOSSSSSSORRRRRRR",
-    "......OOOOOOOOOOSSSSSSSSORRRRRRR",
-    ".....OSSSSSSSSSSSSSSSSSSORRRRRRR",
-    ".....OssssssssssSSSSSSSSORRRRRRR",
-    "......OOOOOOOOOOSSSSSSSSORRRRRRR",
-    "...........OSSSSSSSSSSSSOrRRRRRR",
-    "...........OssSSSSSSSSSsOrrRRRRR",
-    "............OOOSSSSSSSsOOOOrrRRR",
-    "...............OSSSSSsO....OOrrR",
-    "...............OssSSsO......OOrr",
-    "................OOOSsO.......OOO",
-    "...................OO...........",
-]
-let palette: [Character: RGB] = ["O": outline, "S": skin, "s": skinShade, "R": robe, "r": robeShade]
-
-/// Colour of grid cell (x, y), y growing downward.
-func cell(_ x: Int, _ y: Int) -> RGB {
-    let row = y - handTop
-    if hand.indices.contains(row), let c = palette[Array(hand[row])[x]] { return c }
-
-    // The spark of life, in the gap before his fingertip.
-    if (x, y) == (2, 14) { return spark }
-    if [(2, 13), (1, 14), (3, 14), (2, 15)].contains(where: { $0 == (x, y) }) { return gold }
-    if [(4, 11), (0, 12)].contains(where: { $0 == (x, y) }) { return spark }
-
-    // A few stars, then the sky gradient in coarse bands.
-    if [(4, 3), (26, 5), (9, 7), (20, 3), (14, 2), (2, 27), (24, 28), (11, 29), (29, 25)].contains(where: { $0 == (x, y) }) { return star }
-    let t = Double(y / 4) / Double(grid / 4)
-    return (skyTop.r + Int(Double(skyBottom.r - skyTop.r) * t),
-            skyTop.g + Int(Double(skyBottom.g - skyTop.g) * t),
-            skyTop.b + Int(Double(skyBottom.b - skyTop.b) * t))
-}
-
-func color(_ c: RGB) -> CGColor {
-    CGColor(red: CGFloat(c.r) / 255, green: CGFloat(c.g) / 255, blue: CGFloat(c.b) / 255, alpha: 1)
+let sourceURL = URL(fileURLWithPath: "Art/icon-source.png")
+guard let imageSource = CGImageSourceCreateWithURL(sourceURL as CFURL, nil),
+      let source = CGImageSourceCreateImageAtIndex(imageSource, 0, nil) else {
+    print("can't read \(sourceURL.path)"); exit(1)
 }
 
 func context(_ size: Int) -> CGContext {
@@ -73,37 +26,48 @@ func context(_ size: Int) -> CGContext {
               space: CGColorSpace(name: CGColorSpace.sRGB)!, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
 }
 
+/// The artwork's rounded square in `image` (top-left origin), and its corner radius.
+func findArtwork(_ image: CGImage) -> (rect: CGRect, radius: Double) {
+    let w = image.width, h = image.height
+    let ctx = CGContext(data: nil, width: w, height: h, bitsPerComponent: 8, bytesPerRow: w * 4,
+                        space: CGColorSpace(name: CGColorSpace.sRGB)!, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
+    ctx.draw(image, in: CGRect(x: 0, y: 0, width: w, height: h))
+    let px = ctx.data!.assumingMemoryBound(to: UInt8.self)
+    func lit(_ x: Int, _ y: Int) -> Bool {
+        let i = (y * w + x) * 4
+        return Int(px[i]) + Int(px[i + 1]) + Int(px[i + 2]) > 150
+    }
+    let minX = (0..<w).first { lit($0, h / 2) }!, maxX = (0..<w).last { lit($0, h / 2) }!
+    let minY = (0..<h).first { lit(w / 2, $0) }!, maxY = (0..<h).last { lit(w / 2, $0) }!
+    // How far the corner cuts in along the diagonal gives the radius of a circular corner.
+    var gap = 0
+    while !lit(minX + gap, minY + gap) { gap += 1 }
+    return (CGRect(x: minX, y: minY, width: maxX - minX + 1, height: maxY - minY + 1), Double(gap) / (1 - 1 / 2.0.squareRoot()))
+}
+
 func renderMaster() -> CGImage {
     let s = 1024.0
     let ctx = context(1024)
-    // macOS icon grid: 824/1024 body, centered, corner radius ~185/1024.
+    ctx.interpolationQuality = .high
+    let art = findArtwork(source)
+    let trim = 0.012 * art.rect.width  // inside the edge, clear of any dark fringe
+    let crop = source.cropping(to: art.rect.insetBy(dx: trim, dy: trim))!
+
+    // macOS icon grid: 824/1024 body, centered; the corners keep the artwork's own rounding.
     let inset = s * 100 / 1024
     let body = CGRect(x: inset, y: inset, width: s - 2 * inset, height: s - 2 * inset)
-    let squircle = CGPath(roundedRect: body, cornerWidth: s * 185 / 1024, cornerHeight: s * 185 / 1024, transform: nil)
+    let radius = (art.radius - trim) * body.width / (art.rect.width - 2 * trim)
+    let shape = CGPath(roundedRect: body, cornerWidth: radius, cornerHeight: radius, transform: nil)
 
     ctx.saveGState()
     ctx.setShadow(offset: CGSize(width: 0, height: -s * 0.012), blur: s * 0.03, color: CGColor(gray: 0, alpha: 0.35))
-    ctx.addPath(squircle); ctx.setFillColor(color(hills)); ctx.fillPath()
+    ctx.addPath(shape); ctx.setFillColor(CGColor(gray: 0.5, alpha: 1)); ctx.fillPath()
     ctx.restoreGState()
 
     ctx.saveGState()
-    ctx.addPath(squircle); ctx.clip()
-    let step = body.width / Double(grid)
-    for y in 0..<grid {
-        for x in 0..<grid {
-            // Round cell edges so neighbouring blocks share exact boundaries (no seams).
-            let x0 = (body.minX + Double(x) * step).rounded(), x1 = (body.minX + Double(x + 1) * step).rounded()
-            let top = (body.maxY - Double(y) * step).rounded(), bottom = (body.maxY - Double(y + 1) * step).rounded()
-            ctx.setFillColor(color(cell(x, y)))
-            ctx.fill(CGRect(x: x0, y: bottom, width: x1 - x0, height: top - bottom))
-        }
-    }
+    ctx.addPath(shape); ctx.clip()
+    ctx.draw(crop, in: body)
     ctx.restoreGState()
-
-    ctx.addPath(squircle)
-    ctx.setStrokeColor(CGColor(red: 1, green: 0.85, blue: 0.55, alpha: 0.25))
-    ctx.setLineWidth(s * 0.006)
-    ctx.strokePath()
     return ctx.makeImage()!
 }
 
