@@ -31,7 +31,8 @@
   .empty { padding: 14px 12px; border-bottom: 2px dashed var(--track); }
 
   /* Patron */
-  .patron-pick { display: flex; align-items: center; gap: 8px; padding: 12px; }
+  .patron-box { padding: 16px 12px 12px; }
+  .patron-pick { display: flex; align-items: center; gap: 8px; }
   .patron-pick > button { flex: none; padding: 6px 9px; }
   .lineup { position: relative; flex: 1; height: 170px; overflow: hidden; }
   .patron-card {
@@ -42,7 +43,7 @@
   .patron-card:hover { filter: brightness(1.1); }
   .patron-card:active { transform: var(--at); }
   .patron-name { font-weight: 700; text-align: center; margin: 0; }
-  .catchphrase { font-size: 15px; text-align: center; margin: 4px 2px 14px; }
+  .catchphrase { font-size: 15px; text-align: center; margin: 4px 2px 8px; }
 </style>
 </head>
 <body>
@@ -64,12 +65,14 @@
 
   <section aria-labelledby="patron-title">
     <h2 id="patron-title">Your patron</h2>
-    <p class="patron-name" id="patron-name"></p>
-    <p class="catchphrase" id="catchphrase"></p>
-    <div class="patron-pick frame">
-      <button type="button" id="prev" aria-label="Previous patron">&#9664;</button>
-      <div class="lineup" id="patrons" role="radiogroup" aria-labelledby="patron-title"></div>
-      <button type="button" id="next" aria-label="Next patron">&#9654;</button>
+    <div class="frame patron-box">
+      <p class="patron-name" id="patron-name"></p>
+      <p class="catchphrase" id="catchphrase"></p>
+      <div class="patron-pick">
+        <button type="button" id="prev" aria-label="Previous patron">&#9664;</button>
+        <div class="lineup" id="patrons" role="radiogroup" aria-labelledby="patron-title"></div>
+        <button type="button" id="next" aria-label="Next patron">&#9654;</button>
+      </div>
     </div>
   </section>
 </main>
