@@ -1,5 +1,5 @@
 // Settings page: tracked sites with daily limits, and the patron picker.
-import { DEFAULT_SITES, BREACH_COOLDOWN_MS, addSite, removeSite, clampMinutes } from './tracker.js';
+import { DEFAULT_SITES, BREACH_COOLDOWN_MS, RETURN_DELAY_S, addSite, removeSite, clampMinutes } from './tracker.js';
 import { PATRONS, DEFAULT_PATRON, LAYOUT, frameIndex } from './patrons.js';
 
 const $ = id => document.getElementById(id);
@@ -75,6 +75,18 @@ async function loadCooldown() {
     const value = clampMinutes(input.value) ?? fallback;
     input.value = value;
     chrome.storage.sync.set({ cooldownMinutes: value });
+  });
+}
+
+async function loadReturnDelay() {
+  const { returnDelaySeconds = RETURN_DELAY_S } = await chrome.storage.sync.get('returnDelaySeconds');
+  const input = $('return-delay');
+  input.value = returnDelaySeconds;
+  input.addEventListener('change', () => {
+    const n = Math.round(Number(input.value));
+    const value = input.value !== '' && Number.isFinite(n) ? Math.min(Math.max(n, 0), 300) : RETURN_DELAY_S;
+    input.value = value;
+    chrome.storage.sync.set({ returnDelaySeconds: value });
   });
 }
 
@@ -163,4 +175,5 @@ async function loadPatron() {
 
 loadSites();
 loadCooldown();
+loadReturnDelay();
 loadPatron();

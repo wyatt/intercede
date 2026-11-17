@@ -7,7 +7,7 @@
 // closes it and credits the elapsed time. A one-minute alarm flushes it periodically, which also
 // caps how much time an unobserved gap (e.g. the Mac sleeping) can add.
 
-import { DEFAULT_SITES, BREACH_COOLDOWN_MS, credit, dayKey } from './tracker.js';
+import { DEFAULT_SITES, BREACH_COOLDOWN_MS, RETURN_DELAY_S, credit, dayKey } from './tracker.js';
 import { LAYOUT, patronFor, randomPhrase, DEFAULT_PATRON } from './patrons.js';
 
 const FLUSH_MINUTES = 1;
@@ -16,11 +16,13 @@ const MAX_INTERVAL_S = 90;  // longer than this between flushes means we weren't
 // ── Storage ──────────────────────────────────────────────────────────────────
 
 async function settings() {
-  const { sites, patron, cooldownMinutes } = await chrome.storage.sync.get(['sites', 'patron', 'cooldownMinutes']);
+  const { sites, patron, cooldownMinutes, returnDelaySeconds } =
+    await chrome.storage.sync.get(['sites', 'patron', 'cooldownMinutes', 'returnDelaySeconds']);
   return {
     sites: sites ?? DEFAULT_SITES,
     patron: patron ?? DEFAULT_PATRON,
     cooldownMs: cooldownMinutes ? cooldownMinutes * 60 * 1000 : BREACH_COOLDOWN_MS,
+    returnDelayS: returnDelaySeconds ?? RETURN_DELAY_S,
   };
 }
 
@@ -110,7 +112,8 @@ async function nudge(tabId, host, { force = false } = {}) {
   if (presenting.has(tabId) && !force) return;
   const tab = await chrome.tabs.get(tabId).catch(() => null);
   if (!tab?.url || !/^https?:/.test(tab.url)) return;  // Chrome's own pages can't be scripted
-  const patron = patronFor((await settings()).patron);
+  const { patron: slug, returnDelayS } = await settings();
+  const patron = patronFor(slug);
   presenting.add(tabId);
   try {
     await chrome.scripting.executeScript({ target: { tabId }, files: ['src/dissolve.js', 'src/patron.js'] });
@@ -123,6 +126,7 @@ async function nudge(tabId, host, { force = false } = {}) {
         catchphrase: patron.catchphrase,
         phrase: randomPhrase(patron, host),
         host,
+        returnDelayS,
       }],
       func: (force, options) => {
         if (force) IntercedeDissolve.release();

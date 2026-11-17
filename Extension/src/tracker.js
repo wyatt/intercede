@@ -6,6 +6,7 @@ export const DEFAULT_SITES = [
 ].map(host => ({ host, dailyBudgetSeconds: 15 * 60 }));
 
 export const BREACH_COOLDOWN_MS = 5 * 60 * 1000;  // default; the user can change it
+export const RETURN_DELAY_S = 10;  // default lock on "Return anyway"; the user can change it
 export const MINUTE_RANGE = [1, 1440];
 
 /** Lowercased, without a leading "www.". */
