@@ -15,16 +15,21 @@
     durationMs: 1200,     // ≈ the patron's dismiss + settle clips
     tileSize: 8,          // CSS px
     goldFraction: 0.05,   // share of tiles that become golden sparkles
-    tileLife: 0.35,       // fraction of the duration each tile spends drifting away
+    tileLife: 0.45,       // fraction of the duration each tile spends flying away
+    origin: null,         // {x, y} the burst comes from (his raised hand); default bottom-left
     returnDelayS: 10,     // "Return anyway" stays locked this long (counted only while the tab is visible)
   };
   const GOLD = '#E8C15A';
   const VEIL = '#F4ECD8';
+  const DIM = 'rgba(24, 12, 32, 0.28)';
+  const GRAVITY = 1100;   // px/s², for the tossed tiles
+  const FLASH_MS = 260;
+  const SHAKE_MS = 200;
 
   const STYLE = `
     :host { all: initial; }
     .layer { position: fixed; inset: 0; }
-    .dim { background: rgba(24, 12, 32, 0.28); opacity: 0; transition: opacity 400ms ease; pointer-events: none; }
+    .dim { background: ${DIM}; opacity: 0; transition: opacity 400ms ease; pointer-events: none; }
     .dim.on { opacity: 1; }
     canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; }
     .veil {
@@ -97,7 +102,7 @@
     root.append(veil.layer);
 
     const reduced = opts.reducedMotion ?? matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (reduced) await fadeOut(snapshot, veil, opts);
+    if (reduced) await fadeOut(snapshot, veil);
     else await animateTiles(snapshot, veil, opts);
     if (state !== 'dissolving') return { ok: false, reason: 'released' };  // release() mid-effect
 
@@ -137,7 +142,6 @@
     const scatter = !!snapshot;
     if (scatter) {
       b.drawImage(snapshot, 0, 0, W, H);
-      for (const r of opts.keepOut ?? []) b.clearRect(r.x, r.y, r.width, r.height);
     } else {
       veil.layer.style.opacity = '0';    // live page stays visible until the tiles cover it
     }
@@ -145,8 +149,9 @@
 
     const sx = scatter ? (snapshot.naturalWidth || snapshot.width) / W : 0;
     const sy = scatter ? (snapshot.naturalHeight || snapshot.height) / H : 0;
-    const tiles = schedule(W, H, t, opts);
-    for (const tile of tiles) tile.kept = (opts.keepOut ?? []).some(r => overlaps(tile, t, r));
+    const origin = opts.origin ?? { x: 0, y: H };
+    const reach = Math.max(...[[0, 0], [W, 0], [0, H], [W, H]].map(([x, y]) => Math.hypot(x - origin.x, y - origin.y)));
+    const tiles = schedule(W, H, t, opts, origin, reach);
     let next = 0;
     const live = [];
     const start = performance.now();
@@ -154,7 +159,10 @@
     return new Promise(resolve => {
       finish = resolve;
       const step = now => {
-        const p = (now - start) / opts.durationMs;
+        const elapsed = now - start, p = elapsed / opts.durationMs;
+        // A jolt as his hand comes down.
+        base.style.transform = elapsed < SHAKE_MS
+          ? `translate(${Math.round((Math.random() - 0.5) * 6)}px, ${Math.round((Math.random() - 0.5) * 6)}px)` : '';
         while (next < tiles.length && tiles[next].start <= p) {
           const tile = tiles[next++];
           if (scatter) b.clearRect(tile.x, tile.y, t, t);
@@ -170,9 +178,12 @@
             live.splice(i, 1);
             continue;
           }
-          if (scatter && !tile.kept) drawDrifting(f, tile, q, t, snapshot, sx, sy);
+          if (scatter) drawTossed(f, tile, q * tile.life * opts.durationMs / 1000, q, t, snapshot, sx, sy, dpr);
           else drawSettling(f, tile, q, t);
         }
+        f.setTransform(dpr, 0, 0, dpr, 0, 0);
+        drawShockwave(f, origin, reach, p, W, H);
+        drawFlash(f, origin, elapsed);
 
         if (next < tiles.length || live.length) {
           frame = requestAnimationFrame(step);
@@ -186,42 +197,81 @@
     });
   }
 
-  // Tiles leave in a sweep away from the bottom-left, where the patron stands, with some noise.
-  function schedule(W, H, t, opts) {
-    const diag = Math.hypot(W, H);
+  // Tiles burst away from his hand in a widening ring (with some noise), tossed up and outwards
+  // to tumble off under gravity; the gold ones float up, twinkling.
+  function schedule(W, H, t, opts, origin, reach) {
     const tiles = [];
     for (let y = 0; y < H; y += t) {
       for (let x = 0; x < W; x += t) {
-        const d = Math.hypot(x + t / 2, H - (y + t / 2)) / diag;
+        const cx = x + t / 2 - origin.x, cy = y + t / 2 - origin.y;
+        const d = Math.hypot(cx, cy) || 1;
         const life = opts.tileLife * (0.7 + Math.random() * 0.6);
-        const start = Math.min(d * 0.62 + Math.random() * 0.22, 1 - life);
+        const start = Math.min((d / reach) * 0.62 + Math.random() * 0.15, 1 - life);
+        const gold = Math.random() < opts.goldFraction;
+        const speed = 120 + Math.random() * 260;
         tiles.push({
-          x, y, start, life,
-          gold: Math.random() < opts.goldFraction,
-          dx: 12 + Math.random() * 36,     // drift right…
-          dy: -(30 + Math.random() * 70),  // …and up, away from his hand
+          x, y, start, life, gold,
+          vx: gold ? (Math.random() - 0.5) * 40 : (cx / d) * speed + (Math.random() - 0.5) * 60,
+          vy: gold ? -(60 + Math.random() * 120) : (cy / d) * speed - (150 + Math.random() * 250),
+          spin: (Math.random() - 0.5) * 14,  // rad/s
         });
       }
     }
     return tiles.sort((a, b) => a.start - b.start);
   }
 
-  function drawDrifting(f, tile, q, t, snapshot, sx, sy) {
-    const ease = q * q;
-    const x = tile.x + tile.dx * ease, y = tile.y + tile.dy * ease;
-    const size = t * (1 - 0.45 * q);
-    const inset = (t - size) / 2;
+  // `s` is the tile's age in seconds, `q` the fraction of its life gone.
+  function drawTossed(f, tile, s, q, t, snapshot, sx, sy, dpr) {
+    const fall = tile.gold ? 0 : 0.5 * GRAVITY * s * s;
+    const x = tile.x + t / 2 + tile.vx * s, y = tile.y + t / 2 + tile.vy * s + fall;
+    const size = t * (1 - 0.3 * q);
+    const a = tile.spin * s, c = Math.cos(a) * dpr, n = Math.sin(a) * dpr;
+    f.setTransform(c, n, -n, c, x * dpr, y * dpr);
     if (tile.gold) {
-      // Twinkling golden pixel, echoing the sparkles in the patron's dismiss animation.
-      f.globalAlpha = (1 - q) * (0.65 + 0.35 * Math.sin(q * 24));
+      // Twinkling golden star, echoing the sparkles in the patron's dismiss animation.
+      f.globalAlpha = (1 - q) * (0.6 + 0.4 * Math.sin(q * 30));
       f.fillStyle = GOLD;
       const arm = size / 3;
-      f.fillRect(x + inset + arm, y + inset, arm, size);
-      f.fillRect(x + inset, y + inset + arm, size, arm);
+      f.fillRect(-arm / 2, -size / 2 - arm, arm, size + 2 * arm);
+      f.fillRect(-size / 2 - arm, -arm / 2, size + 2 * arm, arm);
     } else {
-      f.globalAlpha = 1 - q;
-      f.drawImage(snapshot, tile.x * sx, tile.y * sy, t * sx, t * sy, x + inset, y + inset, size, size);
+      f.globalAlpha = q < 0.6 ? 1 : (1 - q) / 0.4;
+      f.drawImage(snapshot, tile.x * sx, tile.y * sy, t * sx, t * sy, -size / 2, -size / 2, size, size);
     }
+    f.globalAlpha = 1;
+  }
+
+  // A ring of gold pixels racing outwards from his hand, just ahead of the breaking edge.
+  function drawShockwave(f, origin, reach, p, W, H) {
+    const life = 0.7;
+    if (p >= life) return;
+    const r = (p / 0.62) * reach + 12;
+    f.globalAlpha = 1 - p / life;
+    f.fillStyle = GOLD;
+    const dots = Math.max(8, Math.floor((2 * Math.PI * r) / 14));
+    for (let i = 0; i < dots; i++) {
+      const a = (i / dots) * 2 * Math.PI;
+      const x = origin.x + Math.cos(a) * r, y = origin.y + Math.sin(a) * r;
+      if (x > -4 && x < W && y > -4 && y < H) f.fillRect(Math.round(x / 2) * 2, Math.round(y / 2) * 2, 4, 4);
+    }
+    f.globalAlpha = 1;
+  }
+
+  // A brief pixel starburst at his hand.
+  function drawFlash(f, origin, elapsed) {
+    if (elapsed >= FLASH_MS) return;
+    const k = elapsed / FLASH_MS;
+    f.globalAlpha = 1 - k;
+    for (let ray = 0; ray < 8; ray++) {
+      const a = (ray / 8) * 2 * Math.PI;
+      for (let step = 1; step <= 5; step++) {
+        const dist = step * (6 + k * 18);
+        f.fillStyle = step % 2 ? '#FFFFFF' : GOLD;
+        f.fillRect(Math.round(origin.x + Math.cos(a) * dist) - 2, Math.round(origin.y + Math.sin(a) * dist) - 2, 4, 4);
+      }
+    }
+    f.fillStyle = '#FFFFFF';
+    f.fillRect(origin.x - 5, origin.y - 5, 10, 10);
     f.globalAlpha = 1;
   }
 
@@ -233,12 +283,11 @@
   }
 
   // prefers-reduced-motion: no particles, just a short crossfade to the veil.
-  function fadeOut(snapshot, veil, opts) {
+  function fadeOut(snapshot, veil) {
     const W = innerWidth, H = innerHeight, dpr = window.devicePixelRatio || 1;
     const c = canvas(W, H, dpr);
     if (snapshot) {
       const g = c.getContext('2d'); g.scale(dpr, dpr); g.drawImage(snapshot, 0, 0, W, H);
-      for (const r of opts.keepOut ?? []) g.clearRect(r.x, r.y, r.width, r.height);
       root.append(c);
     } else {
       veil.layer.style.opacity = '0';
@@ -295,9 +344,6 @@
     }, 1000);
   }
 
-  const overlaps = (tile, t, r) =>
-    tile.x < r.x + r.width && tile.x + t > r.x && tile.y < r.y + r.height && tile.y + t > r.y;
-
   function canvas(W, H, dpr) {
     const c = document.createElement('canvas');
     c.width = Math.round(W * dpr);
@@ -325,5 +371,6 @@
     hold, dissolve, release,
     get state() { return state; },
     defaults: { ...DEFAULTS },
+    dimColor: DIM,
   };
 })();

@@ -68,6 +68,9 @@
         backgroundSize: `${layout.cols * layout.frameWidth * this.scale}px ${layout.rows * layout.frameHeight * this.scale}px`,
       });
 
+      this.sheet = new Image();  // for cutting his silhouette out of the snapshot
+      this.sheet.src = sheetUrl;
+
       this.bubble = el('div', 'bubble');
       this.bubble.append(el('b', '', catchphrase), document.createTextNode(phrase));
 
@@ -84,6 +87,9 @@
     // ── Choreography ──
 
     async run() {
+      // A clean picture of the page before he arrives, to patch over him in the later snapshot.
+      this.clean = await capture();
+      if (this.cancelled) return;
       // Commit the offstage position before starting the walk; otherwise the browser merges both
       // style changes and he appears already standing there, with no walk-in.
       this.sprite.getBoundingClientRect();
@@ -150,19 +156,45 @@
     }
 
     async dissolvePage() {
-      // Snapshot the page with him still on it (hiding him would flash), and have the dissolve
-      // leave his area out of it so no copy of him drifts away; he stays above the veil.
-      const keepOut = [this.sprite, this.bubble].map(node => node.getBoundingClientRect());
-      const snapshot = await chrome.runtime.sendMessage({ type: 'capture' }).catch(() => null);
+      // Snapshot the page with him on it (hiding him would flash), then patch his figure and the
+      // bubble with the clean picture, so no copy of him breaks apart; he stays above the veil.
+      this.frozen = true;  // hold his frame still so the patch matches the snapshot exactly
+      const [shot, clean] = await Promise.all([capture().then(loadImage), loadImage(this.clean)]);
+      const at = this.sprite.getBoundingClientRect();
+      const snapshot = shot && clean ? this.withoutHim(shot, clean, at) : null;
+      this.frozen = false;
       const done = IntercedeDissolve.dissolve({
         ...this.words,
         snapshot,
-        keepOut,
-        durationMs: this.clipMs('dismiss') + 150 + this.clipMs('settle'),
+        origin: { x: at.x + at.width * 0.7, y: at.y + at.height * 0.35 },  // his raised hand
+        durationMs: this.clipMs('dismiss') + 150 + this.clipMs('settle') + 700,
         onReturn: () => chrome.runtime.sendMessage({ type: 'returnAnyway' }).catch(() => {}),
       });
       document.documentElement.append(this.host);
       await done;
+    }
+
+    /** `shot` with his figure and the bubble replaced by the same pixels of `clean`, dimmed to match. */
+    withoutHim(shot, clean, at) {
+      const W = innerWidth, H = innerHeight, dpr = shot.naturalWidth / W;
+      const out = canvas(shot.naturalWidth, shot.naturalHeight), o = out.getContext('2d');
+      const patch = canvas(out.width, out.height), p = patch.getContext('2d');
+      o.drawImage(shot, 0, 0);
+      p.scale(dpr, dpr);
+      // Mask: his current frame, grown by a couple of pixels, and the bubble with its shadow.
+      const { frameWidth: fw, frameHeight: fh } = this.layout;
+      for (const [dx, dy] of [[-2, 0], [2, 0], [0, -2], [0, 2], [0, 0]]) {
+        p.drawImage(this.sheet, this.col * fw, this.row * fh, fw, fh, at.x + dx, at.y + dy, at.width, at.height);
+      }
+      const b = this.bubble.getBoundingClientRect();
+      if (b.width && getComputedStyle(this.bubble).opacity !== '0') p.fillRect(b.x - 4, b.y - 4, b.width + 10, b.height + 10);
+      p.globalCompositeOperation = 'source-in';
+      p.drawImage(clean, 0, 0, W, H);
+      p.globalCompositeOperation = 'source-atop';
+      p.fillStyle = IntercedeDissolve.dimColor;  // the hold's dim, which the clean picture predates
+      p.fillRect(0, 0, W, H);
+      o.drawImage(patch, 0, 0);
+      return out;
     }
 
     // ── Animation ──
@@ -181,6 +213,8 @@
       const c = this.layout.clips[this.clip];
       const n = Math.max(0, Math.floor(((now - this.clipStart) / 1000) * c.fps));
       const col = c.loops ? n % c.frames : Math.min(n, c.frames - 1);
+      if (this.frozen) { this.frame = requestAnimationFrame(this.tick); return; }
+      this.col = col; this.row = c.row;
       const fw = this.layout.frameWidth * this.scale, fh = this.layout.frameHeight * this.scale;
       this.sprite.style.backgroundPosition = `${-col * fw}px ${-c.row * fh}px`;
       this.frame = requestAnimationFrame(this.tick);
@@ -197,6 +231,21 @@
       const token = this.token = (this.token ?? 0) + 1;
       return new Promise(resolve => setTimeout(() => resolve(!this.cancelled && token === this.token), ms));
     }
+  }
+
+  const capture = () => chrome.runtime.sendMessage({ type: 'capture' }).catch(() => null);
+
+  async function loadImage(src) {
+    if (!src) return null;
+    const img = new Image();
+    img.src = src;
+    try { await img.decode(); return img; } catch { return null; }
+  }
+
+  function canvas(w, h) {
+    const c = document.createElement('canvas');
+    c.width = w; c.height = h;
+    return c;
   }
 
   function el(tag, className, text) {
