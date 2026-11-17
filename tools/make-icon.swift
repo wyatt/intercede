@@ -1,18 +1,17 @@
-// Builds the app and extension icons from Art/icon-source.png: a square image with the artwork in
+// Builds the extension icons from Art/icon-source.png: a square image with the artwork in
 // a rounded square on a dark background (as image generators tend to give it). The rounded square
 // is found automatically, cut out a few pixels inside its edge (so none of the dark background
 // fringes it), and placed on the macOS icon grid with a soft shadow, at 1024 px and scaled down
-// for the smaller sizes. Writes an .iconset and converts it with iconutil, and with a second
-// argument also writes the extension's icon-{16,32,48,128}.png there.
+// for the smaller sizes. Writes icon-{16,32,48,128}.png into the given folder.
 //
-// usage: swift tools/make-icon.swift <out.icns> [extension-icons-dir]
+// usage: swift tools/make-icon.swift <extension-icons-dir>
 import CoreGraphics
 import Foundation
 import ImageIO
 import UniformTypeIdentifiers
 
-guard (2...3).contains(CommandLine.arguments.count) else {
-    print("usage: make-icon.swift <out.icns> [extension-icons-dir]"); exit(1)
+guard CommandLine.arguments.count == 2 else {
+    print("usage: make-icon.swift <extension-icons-dir>"); exit(1)
 }
 
 let sourceURL = URL(fileURLWithPath: "Art/icon-source.png")
@@ -53,7 +52,7 @@ func renderMaster() -> CGImage {
     let trim = 0.012 * art.rect.width  // inside the edge, clear of any dark fringe
     let crop = source.cropping(to: art.rect.insetBy(dx: trim, dy: trim))!
 
-    // macOS icon grid: 824/1024 body, centered; the corners keep the artwork's own rounding.
+    // A 824/1024 body, centered (the macOS icon grid); the corners keep the artwork's own rounding.
     let inset = s * 100 / 1024
     let body = CGRect(x: inset, y: inset, width: s - 2 * inset, height: s - 2 * inset)
     let radius = (art.radius - trim) * body.width / (art.rect.width - 2 * trim)
@@ -80,34 +79,11 @@ func render(size: Int) -> CGImage {
     return ctx.makeImage()!
 }
 
-let out = URL(fileURLWithPath: CommandLine.arguments[1])
-let iconset = out.deletingPathExtension().appendingPathExtension("iconset")
-try? FileManager.default.removeItem(at: iconset)
-try! FileManager.default.createDirectory(at: iconset, withIntermediateDirectories: true)
-for base in [16, 32, 128, 256, 512] {
-    for scale in [1, 2] {
-        let name = scale == 1 ? "icon_\(base)x\(base).png" : "icon_\(base)x\(base)@2x.png"
-        let dest = CGImageDestinationCreateWithURL(iconset.appendingPathComponent(name) as CFURL,
-                                                   UTType.png.identifier as CFString, 1, nil)!
-        CGImageDestinationAddImage(dest, render(size: base * scale), nil)
-        CGImageDestinationFinalize(dest)
-    }
-}
 func writePNG(_ image: CGImage, _ url: URL) {
     let dest = CGImageDestinationCreateWithURL(url as CFURL, UTType.png.identifier as CFString, 1, nil)!
     CGImageDestinationAddImage(dest, image, nil)
     CGImageDestinationFinalize(dest)
 }
-if CommandLine.arguments.count == 3 {
-    let dir = URL(fileURLWithPath: CommandLine.arguments[2])
-    for size in [16, 32, 48, 128] { writePNG(render(size: size), dir.appendingPathComponent("icon-\(size).png")) }
-    print("wrote extension icons to \(dir.path)")
-}
-
-let p = Process()
-p.executableURL = URL(fileURLWithPath: "/usr/bin/iconutil")
-p.arguments = ["-c", "icns", iconset.path, "-o", out.path]
-try! p.run(); p.waitUntilExit()
-guard p.terminationStatus == 0 else { print("iconutil failed"); exit(1) }
-try? FileManager.default.removeItem(at: iconset)
-print("wrote \(out.path)")
+let dir = URL(fileURLWithPath: CommandLine.arguments[1])
+for size in [16, 32, 48, 128] { writePNG(render(size: size), dir.appendingPathComponent("icon-\(size).png")) }
+print("wrote extension icons to \(dir.path)")

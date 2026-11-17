@@ -82,7 +82,7 @@
 
 <script src="../src/dissolve.js"></script>
 <script>
-// Mirrors Patron.swift (name, catchphrase, one phrase). In the extension these arrive from the app.
+// A copy of each patron (name, catchphrase, one phrase); in the extension these come from patrons.js.
 const PATRONS = [
   { name: 'St. Alphonsus Liguori', catchphrase: 'This is not Liguorian!', phrase: 'I vowed never to waste a moment. Shall we try it together?' },
   { name: 'St. Isidore of Seville', catchphrase: 'Even the patron of the internet says log off!', phrase: 'Close the tab; open a book.' },
@@ -90,7 +90,7 @@ const PATRONS = [
   { name: 'St. Benedict', catchphrase: 'Idleness is the enemy of the soul!', phrase: 'Ora et labora. Right now, mostly labora.' },
   { name: 'St. Thomas Aquinas', catchphrase: 'I answer that: close the tab.', phrase: 'I kept four scribes busy at once. You can manage one tab.' },
 ];
-// Same beat as the app: hand rises ~2.2s after he appears (walk 1.6s + idle 0.6s).
+// Same beat as the extension: hand rises ~2.2s after he appears (walk 1.6s + idle 0.6s).
 const HOLD_AT_MS = 2200, SWEEP_AFTER_HOLD_MS = 2000;
 
 const $ = id => document.getElementById(id);

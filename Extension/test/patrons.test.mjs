@@ -1,19 +1,11 @@
-// patrons.js must match Intercede/Patrons/Patron.swift (the Mac app), and every sheet must exist.
+// Patron data: every sheet must exist, phrases fill in the site, frame timing loops or holds.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, existsSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { PATRONS, randomPhrase, frameIndex, LAYOUT } from '../src/patrons.js';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
-
-test('patrons match Patron.swift', () => {
-  const swift = readFileSync(root + 'Intercede/Patrons/Patron.swift', 'utf8');
-  const fromSwift = [...swift.matchAll(/slug: "([^"]+)",\s*name: "([^"]+)",\s*catchphrase: "([^"]+)",\s*phrases: \[(.*?)\],\s*sheetName: "([^"]+)"/gs)]
-    .map(m => ({ slug: m[1], name: m[2], catchphrase: m[3], phrases: [...m[4].matchAll(/"((?:[^"\\]|\\.)*)"/g)].map(p => p[1]), sheet: m[5] }));
-  assert.equal(fromSwift.length, 5);
-  assert.deepEqual(PATRONS, fromSwift);
-});
 
 test('every patron has a bundled sheet in the extension', () => {
   for (const p of PATRONS) assert.ok(existsSync(root + `Extension/patrons/${p.sheet}.png`), p.sheet);

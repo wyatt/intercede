@@ -1,4 +1,4 @@
-// Usage rules (ported from IntercedeTests/UsageTrackerTests.swift). Run: make ext-test
+// Usage rules. Run: make ext-test
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {

@@ -1,5 +1,4 @@
 // The patrons: who they are, what they say, and how their sprite sheets are laid out.
-// Text mirrors Intercede/Patrons/Patron.swift (test/patrons.test.mjs keeps the two in sync).
 // `%@` in a phrase is replaced by the site.
 
 export const PATRONS = [

@@ -1,6 +1,6 @@
 // Intercede patron overlay: the saint walks onto the page, raises a hand (the page holds), speaks,
 // sweeps the page away (it dissolves), lowers his hand and waits; a click sends him off.
-// Same beats and timings as the Mac app's NudgeScene.
+// The beats: walk in, hold, speak, sweep, settle, and walk out when clicked.
 //
 // Injected on demand by the background worker after dissolve.js:
 //   IntercedePatron.present({ sheetUrl, layout, name, catchphrase, phrase, host, returnDelayS? })
