@@ -29,8 +29,15 @@
   .remove:hover { color: var(--over); border-color: var(--over); filter: none; }
   .add { display: flex; gap: 10px; padding: 12px; background: var(--track); border-top: 2px solid var(--line); }
   .add input { flex: 1; }
-  .cooldown { display: block; font-weight: 500; margin-top: 4px; }
-  .cooldown input { width: 64px; margin: 0 4px; text-align: right; font-variant-numeric: tabular-nums; }
+  .frame > .row:last-child { border-bottom: none; }
+  label.row .host { white-space: normal; font-weight: 500; }
+  /* Big pixels in a darker shade, scattered at random across the page. */
+  body::before {
+    content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+    background: var(--dither);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='960' height='960'%3E%3Crect x='32' y='560' width='16' height='16'/%3E%3Crect x='48' y='64' width='16' height='16'/%3E%3Crect x='48' y='224' width='16' height='16'/%3E%3Crect x='48' y='576' width='16' height='16'/%3E%3Crect x='48' y='624' width='16' height='16'/%3E%3Crect x='48' y='832' width='16' height='16'/%3E%3Crect x='64' y='576' width='16' height='16'/%3E%3Crect x='80' y='432' width='16' height='16'/%3E%3Crect x='96' y='368' width='16' height='16'/%3E%3Crect x='112' y='576' width='16' height='16'/%3E%3Crect x='144' y='544' width='16' height='16'/%3E%3Crect x='176' y='96' width='16' height='16'/%3E%3Crect x='208' y='32' width='16' height='16'/%3E%3Crect x='208' y='496' width='16' height='16'/%3E%3Crect x='224' y='640' width='16' height='16'/%3E%3Crect x='240' y='80' width='16' height='16'/%3E%3Crect x='288' y='416' width='16' height='16'/%3E%3Crect x='304' y='240' width='16' height='16'/%3E%3Crect x='304' y='560' width='16' height='16'/%3E%3Crect x='320' y='144' width='16' height='16'/%3E%3Crect x='320' y='464' width='16' height='16'/%3E%3Crect x='368' y='96' width='16' height='16'/%3E%3Crect x='400' y='656' width='16' height='16'/%3E%3Crect x='416' y='64' width='16' height='16'/%3E%3Crect x='432' y='784' width='16' height='16'/%3E%3Crect x='464' y='368' width='16' height='16'/%3E%3Crect x='560' y='432' width='16' height='16'/%3E%3Crect x='560' y='720' width='16' height='16'/%3E%3Crect x='576' y='112' width='16' height='16'/%3E%3Crect x='592' y='48' width='16' height='16'/%3E%3Crect x='592' y='400' width='16' height='16'/%3E%3Crect x='592' y='576' width='16' height='16'/%3E%3Crect x='592' y='944' width='16' height='16'/%3E%3Crect x='640' y='192' width='16' height='16'/%3E%3Crect x='640' y='592' width='16' height='16'/%3E%3Crect x='688' y='544' width='16' height='16'/%3E%3Crect x='704' y='784' width='16' height='16'/%3E%3Crect x='800' y='176' width='16' height='16'/%3E%3Crect x='832' y='544' width='16' height='16'/%3E%3Crect x='832' y='688' width='16' height='16'/%3E%3Crect x='864' y='128' width='16' height='16'/%3E%3Crect x='928' y='512' width='16' height='16'/%3E%3C/svg%3E") 0 0 / 960px 960px;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='960' height='960'%3E%3Crect x='32' y='560' width='16' height='16'/%3E%3Crect x='48' y='64' width='16' height='16'/%3E%3Crect x='48' y='224' width='16' height='16'/%3E%3Crect x='48' y='576' width='16' height='16'/%3E%3Crect x='48' y='624' width='16' height='16'/%3E%3Crect x='48' y='832' width='16' height='16'/%3E%3Crect x='64' y='576' width='16' height='16'/%3E%3Crect x='80' y='432' width='16' height='16'/%3E%3Crect x='96' y='368' width='16' height='16'/%3E%3Crect x='112' y='576' width='16' height='16'/%3E%3Crect x='144' y='544' width='16' height='16'/%3E%3Crect x='176' y='96' width='16' height='16'/%3E%3Crect x='208' y='32' width='16' height='16'/%3E%3Crect x='208' y='496' width='16' height='16'/%3E%3Crect x='224' y='640' width='16' height='16'/%3E%3Crect x='240' y='80' width='16' height='16'/%3E%3Crect x='288' y='416' width='16' height='16'/%3E%3Crect x='304' y='240' width='16' height='16'/%3E%3Crect x='304' y='560' width='16' height='16'/%3E%3Crect x='320' y='144' width='16' height='16'/%3E%3Crect x='320' y='464' width='16' height='16'/%3E%3Crect x='368' y='96' width='16' height='16'/%3E%3Crect x='400' y='656' width='16' height='16'/%3E%3Crect x='416' y='64' width='16' height='16'/%3E%3Crect x='432' y='784' width='16' height='16'/%3E%3Crect x='464' y='368' width='16' height='16'/%3E%3Crect x='560' y='432' width='16' height='16'/%3E%3Crect x='560' y='720' width='16' height='16'/%3E%3Crect x='576' y='112' width='16' height='16'/%3E%3Crect x='592' y='48' width='16' height='16'/%3E%3Crect x='592' y='400' width='16' height='16'/%3E%3Crect x='592' y='576' width='16' height='16'/%3E%3Crect x='592' y='944' width='16' height='16'/%3E%3Crect x='640' y='192' width='16' height='16'/%3E%3Crect x='640' y='592' width='16' height='16'/%3E%3Crect x='688' y='544' width='16' height='16'/%3E%3Crect x='704' y='784' width='16' height='16'/%3E%3Crect x='800' y='176' width='16' height='16'/%3E%3Crect x='832' y='544' width='16' height='16'/%3E%3Crect x='832' y='688' width='16' height='16'/%3E%3Crect x='864' y='128' width='16' height='16'/%3E%3Crect x='928' y='512' width='16' height='16'/%3E%3C/svg%3E") 0 0 / 960px 960px;
+  }
   .error { color: var(--over); font-size: 13px; margin: 10px 2px 0; min-height: 1em; }
   .empty { padding: 14px 12px; border-bottom: 2px dashed var(--track); }
 
@@ -55,21 +62,6 @@
   <h1>Intercede</h1>
   <p class="lede muted">When you've used up a site's daily time, your patron steps in.</p>
 
-  <section aria-labelledby="sites-title">
-    <h2 id="sites-title">Tracked sites</h2>
-    <div class="sites frame">
-      <div id="site-rows"></div>
-      <form class="add" id="add-form">
-        <input id="new-host" placeholder="Add a site (e.g. twitch.tv)" aria-label="Site to add" autocomplete="off">
-        <button type="submit">Add</button>
-      </form>
-    </div>
-    <p class="error" id="add-error" role="alert"></p>
-    <label class="cooldown">Once you're over a limit, your patron comes back every
-      <input id="cooldown" type="number" min="1" max="1440" step="1" aria-label="Minutes between visits"> min
-    </label>
-  </section>
-
   <section aria-labelledby="patron-title">
     <h2 id="patron-title">Your patron</h2>
     <div class="frame patron-box">
@@ -80,6 +72,29 @@
         <div class="lineup" id="patrons" role="radiogroup" aria-labelledby="patron-title"></div>
         <button type="button" id="next" aria-label="Next patron">&#9654;</button>
       </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="sites-title">
+    <h2 id="sites-title">Tracked sites</h2>
+    <div class="sites frame">
+      <div id="site-rows"></div>
+      <form class="add" id="add-form">
+        <input id="new-host" placeholder="Add a site (e.g. twitch.tv)" aria-label="Site to add" autocomplete="off">
+        <button type="submit">Add</button>
+      </form>
+    </div>
+    <p class="error" id="add-error" role="alert"></p>
+  </section>
+
+  <section aria-labelledby="other-title">
+    <h2 id="other-title">Other settings</h2>
+    <div class="frame">
+      <label class="row">
+        <span class="host">Once you're over a limit, your patron comes back every</span>
+        <input id="cooldown" type="number" min="1" max="1440" step="1">
+        <span class="unit muted">min</span>
+      </label>
     </div>
   </section>
   <p class="credit muted">Made by <a href="https://wyattsell.com" target="_blank" rel="noopener">Wyatt Sell</a></p>

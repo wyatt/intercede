@@ -21,6 +21,7 @@
   };
   const GOLD = '#E8C15A';
   const VEIL = '#F4ECD8';
+  const SPECKS = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='960' height='960' fill='%23E2D3AE'%3E%3Crect x='32' y='560' width='16' height='16'/%3E%3Crect x='48' y='64' width='16' height='16'/%3E%3Crect x='48' y='224' width='16' height='16'/%3E%3Crect x='48' y='576' width='16' height='16'/%3E%3Crect x='48' y='624' width='16' height='16'/%3E%3Crect x='48' y='832' width='16' height='16'/%3E%3Crect x='64' y='576' width='16' height='16'/%3E%3Crect x='80' y='432' width='16' height='16'/%3E%3Crect x='96' y='368' width='16' height='16'/%3E%3Crect x='112' y='576' width='16' height='16'/%3E%3Crect x='144' y='544' width='16' height='16'/%3E%3Crect x='176' y='96' width='16' height='16'/%3E%3Crect x='208' y='32' width='16' height='16'/%3E%3Crect x='208' y='496' width='16' height='16'/%3E%3Crect x='224' y='640' width='16' height='16'/%3E%3Crect x='240' y='80' width='16' height='16'/%3E%3Crect x='288' y='416' width='16' height='16'/%3E%3Crect x='304' y='240' width='16' height='16'/%3E%3Crect x='304' y='560' width='16' height='16'/%3E%3Crect x='320' y='144' width='16' height='16'/%3E%3Crect x='320' y='464' width='16' height='16'/%3E%3Crect x='368' y='96' width='16' height='16'/%3E%3Crect x='400' y='656' width='16' height='16'/%3E%3Crect x='416' y='64' width='16' height='16'/%3E%3Crect x='432' y='784' width='16' height='16'/%3E%3Crect x='464' y='368' width='16' height='16'/%3E%3Crect x='560' y='432' width='16' height='16'/%3E%3Crect x='560' y='720' width='16' height='16'/%3E%3Crect x='576' y='112' width='16' height='16'/%3E%3Crect x='592' y='48' width='16' height='16'/%3E%3Crect x='592' y='400' width='16' height='16'/%3E%3Crect x='592' y='576' width='16' height='16'/%3E%3Crect x='592' y='944' width='16' height='16'/%3E%3Crect x='640' y='192' width='16' height='16'/%3E%3Crect x='640' y='592' width='16' height='16'/%3E%3Crect x='688' y='544' width='16' height='16'/%3E%3Crect x='704' y='784' width='16' height='16'/%3E%3Crect x='800' y='176' width='16' height='16'/%3E%3Crect x='832' y='544' width='16' height='16'/%3E%3Crect x='832' y='688' width='16' height='16'/%3E%3Crect x='864' y='128' width='16' height='16'/%3E%3Crect x='928' y='512' width='16' height='16'/%3E%3C/svg%3E";  // big darker pixels scattered on the veil
   const DIM = 'rgba(24, 12, 32, 0.28)';
   const GRAVITY = 1100;   // px/s², for the tossed tiles
   const FLASH_MS = 260;
@@ -33,7 +34,7 @@
     .dim.on { opacity: 1; }
     canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; }
     .veil {
-      background: ${VEIL}; display: flex; align-items: center; justify-content: center;
+      background: ${VEIL} url("${SPECKS}") 0 0 / 960px 960px; display: flex; align-items: center; justify-content: center;
       font: 500 15px/1.45 ui-monospace, "SF Mono", Menlo, Consolas, monospace; color: #3B2A1A;
     }
     .card { max-width: 30em; padding: 2em; text-align: center; opacity: 0; transform: translateY(6px);
