@@ -21,7 +21,7 @@
   };
   const GOLD = '#E8C15A';
   const VEIL = '#F4ECD8';
-  const SPECKS = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1280' height='1280' fill='%23EBE0C3'%3E%3Crect x='64' y='160' width='32' height='32'/%3E%3Crect x='64' y='1120' width='32' height='32'/%3E%3Crect x='96' y='448' width='32' height='32'/%3E%3Crect x='96' y='1152' width='32' height='32'/%3E%3Crect x='128' y='480' width='32' height='32'/%3E%3Crect x='128' y='1088' width='32' height='32'/%3E%3Crect x='160' y='1120' width='32' height='32'/%3E%3Crect x='192' y='736' width='32' height='32'/%3E%3Crect x='256' y='576' width='32' height='32'/%3E%3Crect x='448' y='1184' width='32' height='32'/%3E%3Crect x='640' y='288' width='32' height='32'/%3E%3Crect x='800' y='96' width='32' height='32'/%3E%3Crect x='832' y='288' width='32' height='32'/%3E%3Crect x='864' y='96' width='32' height='32'/%3E%3Crect x='864' y='832' width='32' height='32'/%3E%3Crect x='1024' y='416' width='32' height='32'/%3E%3Crect x='1088' y='224' width='32' height='32'/%3E%3Crect x='1120' y='352' width='32' height='32'/%3E%3Crect x='1152' y='224' width='32' height='32'/%3E%3Crect x='1152' y='608' width='32' height='32'/%3E%3Crect x='1184' y='96' width='32' height='32'/%3E%3Crect x='1184' y='800' width='32' height='32'/%3E%3C/svg%3E";  // big, faint, darker pixels scattered on the veil
+  const SPECKS = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1440' height='1440' fill='%23EBE0C3'%3E%3Crect x='48' y='96' width='48' height='48'/%3E%3Crect x='48' y='1248' width='48' height='48'/%3E%3Crect x='96' y='624' width='48' height='48'/%3E%3Crect x='144' y='528' width='48' height='48'/%3E%3Crect x='288' y='48' width='48' height='48'/%3E%3Crect x='336' y='96' width='48' height='48'/%3E%3Crect x='480' y='192' width='48' height='48'/%3E%3Crect x='576' y='960' width='48' height='48'/%3E%3Crect x='624' y='96' width='48' height='48'/%3E%3Crect x='816' y='624' width='48' height='48'/%3E%3Crect x='864' y='48' width='48' height='48'/%3E%3Crect x='864' y='144' width='48' height='48'/%3E%3Crect x='1248' y='816' width='48' height='48'/%3E%3Crect x='1392' y='768' width='48' height='48'/%3E%3C/svg%3E";  // big, faint, darker pixels scattered on the veil
   const DIM = 'rgba(24, 12, 32, 0.28)';
   const GRAVITY = 1100;   // px/s², for the tossed tiles
   const FLASH_MS = 260;
@@ -34,7 +34,7 @@
     .dim.on { opacity: 1; }
     canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; }
     .veil {
-      background: ${VEIL} url("${SPECKS}") 0 0 / 1280px 1280px; display: flex; align-items: center; justify-content: center;
+      background: ${VEIL} url("${SPECKS}") 0 0 / 1440px 1440px; display: flex; align-items: center; justify-content: center;
       font: 500 15px/1.45 ui-monospace, "SF Mono", Menlo, Consolas, monospace; color: #3B2A1A;
     }
     .card { max-width: 30em; padding: 2em; text-align: center; opacity: 0; transform: translateY(6px);
