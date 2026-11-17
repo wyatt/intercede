@@ -1,6 +1,6 @@
 // Settings page: tracked sites with daily limits, and the patron picker.
 import { DEFAULT_SITES, addSite, removeSite, clampMinutes } from './tracker.js';
-import { PATRONS, DEFAULT_PATRON, LAYOUT, patronFor, frameIndex } from './patrons.js';
+import { PATRONS, DEFAULT_PATRON, LAYOUT, frameIndex } from './patrons.js';
 
 const $ = id => document.getElementById(id);
 let sites = [];
@@ -65,57 +65,78 @@ $('add-form').addEventListener('submit', event => {
 $('new-host').addEventListener('input', () => { $('add-error').textContent = ''; });
 
 // ── Patron ──
+// A looping lineup: the chosen patron stands large in the middle, the others step down in size
+// to either side, wrapping around.
 
-const SPRITE_HEIGHT = 100;
-const scale = SPRITE_HEIGHT / LAYOUT.frameHeight;
-const cards = new Map();  // slug → card button
-let chosen = DEFAULT_PATRON;
+const scale = 150 / LAYOUT.frameHeight;
+const SLOTS = [  // by distance from the middle
+  { x: 0, size: 1, opacity: 1 },
+  { x: 132, size: 0.62, opacity: 0.8 },
+  { x: 200, size: 0.45, opacity: 0.55 },
+];
+const HIDDEN = { x: 300, size: 0.3, opacity: 0 };
+const cards = [];  // { patron, card, offset }
+let chosen = 0;    // index into PATRONS
 
 function renderPatrons() {
-  const grid = $('patrons');
   for (const patron of PATRONS) {
     const card = document.createElement('button');
     card.type = 'button';
-    card.className = 'patron-card';
+    card.className = 'patron-card sprite';
     card.setAttribute('role', 'radio');
-    const sprite = document.createElement('div');
-    sprite.className = 'sprite';
-    sprite.style.backgroundImage = `url("patrons/${patron.sheet}.png")`;
-    sprite.style.backgroundSize = `${LAYOUT.cols * LAYOUT.frameWidth * scale}px ${LAYOUT.rows * LAYOUT.frameHeight * scale}px`;
-    card.append(sprite, document.createTextNode(patron.name));
-    card.addEventListener('click', () => choose(patron.slug));
-    cards.set(patron.slug, card);
-    grid.append(card);
+    card.setAttribute('aria-label', patron.name);
+    card.style.backgroundImage = `url("patrons/${patron.sheet}.png")`;
+    card.style.backgroundSize = `${LAYOUT.cols * LAYOUT.frameWidth * scale}px ${LAYOUT.rows * LAYOUT.frameHeight * scale}px`;
+    const entry = { patron, card, offset: null };
+    card.addEventListener('click', () => choose(cards.indexOf(entry)));
+    cards.push(entry);
+    $('patrons').append(card);
   }
 }
 
-function choose(slug, save = true) {
-  chosen = patronFor(slug).slug;
-  for (const [s, card] of cards) {
-    card.setAttribute('aria-checked', String(s === chosen));
-    card.tabIndex = s === chosen ? 0 : -1;
+function choose(index, save = true) {
+  const n = cards.length;
+  chosen = (index + n) % n;
+  for (const [i, entry] of cards.entries()) {
+    let offset = (i - chosen + n) % n;
+    if (offset > n / 2) offset -= n;  // nearest way round
+    const slot = SLOTS[Math.abs(offset)] ?? HIDDEN;
+    const at = `translateX(${Math.sign(offset) * slot.x}px) scale(${slot.size})`;
+    // A card wrapping from one end to the other jumps instead of sliding across the middle.
+    const wraps = entry.offset !== null && Math.abs(offset - entry.offset) > 1;
+    if (wraps) entry.card.style.transition = 'none';
+    entry.card.style.transform = at;
+    entry.card.style.setProperty('--at', at);
+    entry.card.style.opacity = slot.opacity;
+    entry.card.style.zIndex = 10 - Math.abs(offset);
+    entry.card.style.pointerEvents = slot === HIDDEN ? 'none' : '';
+    if (wraps) { entry.card.getBoundingClientRect(); entry.card.style.transition = ''; }
+    entry.offset = offset;
+    entry.card.setAttribute('aria-checked', String(offset === 0));
+    entry.card.tabIndex = offset === 0 ? 0 : -1;
   }
-  $('catchphrase').textContent = `“${patronFor(chosen).catchphrase}”`;
-  if (save) chrome.storage.sync.set({ patron: chosen });
+  const patron = cards[chosen].patron;
+  $('patron-name').textContent = patron.name;
+  $('catchphrase').textContent = `“${patron.catchphrase}”`;
+  if (save) chrome.storage.sync.set({ patron: patron.slug });
 }
 
-// Arrow keys move the choice, as in any radio group.
+$('prev').addEventListener('click', () => choose(chosen - 1));
+$('next').addEventListener('click', () => choose(chosen + 1));
 $('patrons').addEventListener('keydown', event => {
   const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[event.key];
   if (!step) return;
   event.preventDefault();
-  const slugs = PATRONS.map(p => p.slug);
-  const next = slugs[(slugs.indexOf(chosen) + step + slugs.length) % slugs.length];
-  choose(next);
-  cards.get(next).focus();
+  choose(chosen + step);
+  cards[chosen].card.focus();
 });
 
-// Every patron idles; only the chosen one keeps moving, the rest hold their first frame.
+// Only the chosen patron idles; the rest hold their first frame.
 (function animate(now) {
   const clip = LAYOUT.clips.idle;
-  for (const [slug, card] of cards) {
-    const col = slug === chosen ? frameIndex(clip, now) : 0;
-    card.firstChild.style.backgroundPosition = `${-col * LAYOUT.frameWidth * scale}px ${-clip.row * LAYOUT.frameHeight * scale}px`;
+  for (const [i, { card }] of cards.entries()) {
+    const col = i === chosen ? frameIndex(clip, now) : 0;
+    card.style.backgroundPosition = `${-col * LAYOUT.frameWidth * scale}px ${-clip.row * LAYOUT.frameHeight * scale}px`;
   }
   requestAnimationFrame(animate);
 })(performance.now());
@@ -123,7 +144,7 @@ $('patrons').addEventListener('keydown', event => {
 async function loadPatron() {
   const { patron = DEFAULT_PATRON } = await chrome.storage.sync.get('patron');
   renderPatrons();
-  choose(patron, false);
+  choose(Math.max(0, PATRONS.findIndex(p => p.slug === patron)), false);
 }
 
 loadSites();
