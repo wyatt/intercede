@@ -56,7 +56,8 @@
   /* Demo */
   /* A Chrome window (macOS, light theme) around the demo */
   .browser {
-    margin: 48px auto 0; max-width: 960px; border-radius: 12px; overflow: hidden; background: #fff;
+    /* wider than the page column, centred on it */
+    width: min(1140px, calc(100vw - 32px)); margin: 48px 0 0 50%; transform: translateX(-50%); border-radius: 12px; overflow: hidden; background: #fff;
     box-shadow: 0 0 0 1px rgba(0,0,0,.14), 0 2px 6px rgba(0,0,0,.08), 0 24px 60px rgba(40,24,8,.28);
     font: 400 12px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; color: #1f1f1f; text-align: left;
   }
