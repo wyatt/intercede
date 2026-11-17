@@ -65,14 +65,14 @@ $('add-form').addEventListener('submit', event => {
 $('new-host').addEventListener('input', () => { $('add-error').textContent = ''; });
 
 // ── Patron ──
-// A looping lineup: the chosen patron stands large in the middle, the others step down in size
-// to either side, wrapping around.
+// A looping lineup: the chosen patron stands large in the middle, the others smaller (all the
+// same size) to either side, wrapping around.
 
 const scale = 150 / LAYOUT.frameHeight;
 const SLOTS = [  // by distance from the middle
-  { x: 0, size: 1, opacity: 1 },
-  { x: 132, size: 0.62, opacity: 0.8 },
-  { x: 200, size: 0.45, opacity: 0.55 },
+  { x: 0, size: 1.25, opacity: 1 },
+  { x: 132, size: 0.6, opacity: 0.75 },
+  { x: 222, size: 0.6, opacity: 0.75 },
 ];
 const HIDDEN = { x: 300, size: 0.3, opacity: 0 };
 const cards = [];  // { patron, card, offset }
