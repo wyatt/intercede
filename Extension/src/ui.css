@@ -79,13 +79,13 @@ input, select {
 .site-head .host { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .site-head .used { font-variant-numeric: tabular-nums; }
 .site-head .used.over { color: var(--over); }
-/* A health bar: framed, filled in chunky segments. */
+/* A health bar. */
 .bar { height: 10px; background: var(--track); margin-top: 4px; padding: 1px; }
 .bar > div {
   height: 100%;
-  background: repeating-linear-gradient(90deg, var(--ok) 0 6px, transparent 6px 8px);
+  background: var(--ok);
 }
-.bar > div.over { background: repeating-linear-gradient(90deg, var(--over) 0 6px, transparent 6px 8px); }
+.bar > div.over { background: var(--over); }
 
 /* Animated patron sprite (popup and settings). */
 .sprite { background-repeat: no-repeat; image-rendering: pixelated; }

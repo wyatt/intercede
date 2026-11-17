@@ -9,32 +9,32 @@
   .box { padding: 10px 12px 12px; border: 2px solid var(--line); }  /* the whole panel */
   header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
   h1 { font-size: 16px; margin: 0; letter-spacing: .04em; }
+  .date { font-size: 11px; font-weight: 500; letter-spacing: 0; margin-left: 6px; }
   .icon-button { background: none; border: none; box-shadow: none; padding: 2px; color: var(--muted); display: flex; }
   .icon-button:hover { color: var(--text); filter: none; }
   .icon-button:active { transform: translate(1px, 1px); }
   main { max-height: 320px; overflow-y: auto; }
-  h2 { font-size: 10px; color: var(--muted); margin: 0 0 10px; letter-spacing: .08em; }
   footer { display: flex; align-items: flex-end; gap: 8px; margin-top: 14px; }
-  .sprite { flex: none; width: 41px; height: 48px; }
+  .sprite { flex: none; width: 41px; height: 48px; padding: 0; border: none; background-color: transparent; cursor: pointer; }
+  .sprite:hover { filter: brightness(1.1); }
+  .sprite:active { filter: brightness(.9); }
   .patron { flex: 1; font-size: 13px; padding-bottom: 6px; }
 </style>
 </head>
 <body>
 <div class="box">
 <header>
-  <h1>Intercede</h1>
+  <h1>Intercede<span class="date muted" id="date"></span></h1>
   <button class="icon-button" id="settings" title="Settings" aria-label="Settings">
     <svg width="20" height="20" viewBox="0 0 10 10" fill="currentColor" shape-rendering="crispEdges" aria-hidden="true"><path d="M4 0h2v1h-2zM1 1h2v1h-2zM4 1h2v1h-2zM7 1h2v1h-2zM1 2h8v1h-8zM2 3h2v1h-2zM6 3h2v1h-2zM0 4h3v1h-3zM7 4h3v1h-3zM0 5h3v1h-3zM7 5h3v1h-3zM2 6h2v1h-2zM6 6h2v1h-2zM1 7h8v1h-8zM1 8h2v1h-2zM4 8h2v1h-2zM7 8h2v1h-2zM4 9h2v1h-2z"/></svg>
   </button>
 </header>
 <main>
-  <h2>Today</h2>
   <div id="stats"></div>
 </main>
 <footer>
-  <div class="sprite" id="sprite" role="img"></div>
+  <button class="sprite" id="sprite" type="button" title="Send him in"></button>
   <span class="patron" id="patron"></span>
-  <button id="test">Test nudge</button>
 </footer>
 </div>
 <script type="module" src="src/popup.js"></script>

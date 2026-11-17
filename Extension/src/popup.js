@@ -1,4 +1,5 @@
-// Toolbar popup: today's time per tracked site against its budget, the patron, and Test Nudge.
+// Toolbar popup: today's time per tracked site against its budget, and the patron (click him to
+// send him onto the current tab).
 import { DEFAULT_SITES, dayKey, normalizeHost } from './tracker.js';
 import { DEFAULT_PATRON, LAYOUT, patronFor, frameIndex } from './patrons.js';
 
@@ -50,7 +51,7 @@ const scale = 48 / LAYOUT.frameHeight;
 
 function showPatron(patron) {
   $('patron').textContent = patron.name;
-  sprite.setAttribute('aria-label', patron.name);
+  sprite.setAttribute('aria-label', `Send ${patron.name} onto this page`);
   sprite.style.backgroundImage = `url("patrons/${patron.sheet}.png")`;
   sprite.style.backgroundSize = `${LAYOUT.cols * LAYOUT.frameWidth * scale}px ${LAYOUT.rows * LAYOUT.frameHeight * scale}px`;
 }
@@ -62,7 +63,8 @@ function showPatron(patron) {
 })(performance.now());
 
 $('settings').addEventListener('click', () => chrome.runtime.openOptionsPage());
-$('test').addEventListener('click', async () => {
+$('date').textContent = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+sprite.addEventListener('click', async () => {
   await chrome.runtime.sendMessage({ type: 'testNudge' });
   window.close();
 });

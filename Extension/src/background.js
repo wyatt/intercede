@@ -25,6 +25,19 @@ async function settings() {
 }
 
 const usageKey = date => `usage:${dayKey(date)}`;
+const eventsKey = date => `events:${dayKey(date)}`;  // { host: { nudges, returns } }
+
+/** Counts a nudge or a "Return anyway" on `host` for today. Kept with the usage, by day. */
+function record(host, event) {
+  if (!host) return;  // a test nudge
+  serial(async () => {
+    const key = eventsKey(new Date());
+    const day = (await chrome.storage.local.get(key))[key] ?? {};
+    const counts = day[host] ?? { nudges: 0, returns: 0 };
+    counts[event]++;
+    await chrome.storage.local.set({ [key]: { ...day, [host]: counts } });
+  });
+}
 
 // ── Attention tracking ───────────────────────────────────────────────────────
 
@@ -106,9 +119,11 @@ async function nudge(tabId, host) {
         name: patron.name,
         catchphrase: patron.catchphrase,
         phrase: randomPhrase(patron, host),
+        host,
       }],
       func: options => { IntercedePatron.present(options); },
     });
+    record(host, 'nudges');
   } catch (e) {
     presenting.delete(tabId);
     console.warn('[intercede] could not nudge tab', tabId, e);
@@ -134,7 +149,7 @@ chrome.runtime.onMessage.addListener((message, sender, reply) => {
       presenting.delete(sender.tab?.id);
       return;
     case 'returnAnyway':
-      console.info('[intercede] return anyway on', sender.tab?.url);
+      record(message.host, 'returns');
       return;
   }
 });
