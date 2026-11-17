@@ -102,9 +102,12 @@ chrome.runtime.onInstalled.addListener(async ({ reason }) => {
 
 const presenting = new Set();  // tab ids with a patron on screen
 
-/** Sends the selected patron onto `tabId`. `host` is the site over budget, or null for a test. */
-async function nudge(tabId, host) {
-  if (presenting.has(tabId)) return;
+/**
+ * Sends the selected patron onto `tabId`. `host` is the site over budget, or null for a test.
+ * `force` (a click on him in the popup) replaces any visit or veil already on the page.
+ */
+async function nudge(tabId, host, { force = false } = {}) {
+  if (presenting.has(tabId) && !force) return;
   const tab = await chrome.tabs.get(tabId).catch(() => null);
   if (!tab?.url || !/^https?:/.test(tab.url)) return;  // Chrome's own pages can't be scripted
   const patron = patronFor((await settings()).patron);
@@ -113,7 +116,7 @@ async function nudge(tabId, host) {
     await chrome.scripting.executeScript({ target: { tabId }, files: ['src/dissolve.js', 'src/patron.js'] });
     await chrome.scripting.executeScript({
       target: { tabId },
-      args: [{
+      args: [force, {
         sheetUrl: chrome.runtime.getURL(`patrons/${patron.sheet}.png`),
         layout: LAYOUT,
         name: patron.name,
@@ -121,7 +124,10 @@ async function nudge(tabId, host) {
         phrase: randomPhrase(patron, host),
         host,
       }],
-      func: options => { IntercedePatron.present(options); },
+      func: (force, options) => {
+        if (force) IntercedeDissolve.release();
+        IntercedePatron.present(options);
+      },
     });
     record(host, 'nudges');
   } catch (e) {
@@ -131,12 +137,14 @@ async function nudge(tabId, host) {
 }
 
 chrome.tabs.onRemoved.addListener(tabId => presenting.delete(tabId));
+// A reload or navigation takes him off the page without a patronDone.
+chrome.tabs.onUpdated.addListener((tabId, change) => { if (change.status === 'loading') presenting.delete(tabId); });
 
 chrome.runtime.onMessage.addListener((message, sender, reply) => {
   if (sender.id !== chrome.runtime.id) return;
   switch (message?.type) {
     case 'testNudge':  // from the popup: the active tab of the window it was opened from
-      chrome.tabs.query({ active: true, lastFocusedWindow: true }).then(([tab]) => tab && nudge(tab.id, null));
+      chrome.tabs.query({ active: true, lastFocusedWindow: true }).then(([tab]) => tab && nudge(tab.id, null, { force: true }));
       return;
     case 'capture':  // from the page: snapshot it for the dissolve (only the extension can)
       chrome.tabs.captureVisibleTab(sender.tab.windowId, { format: 'jpeg', quality: 85 })
