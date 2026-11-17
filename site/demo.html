@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Intercede demo</title>
+<!-- The live demo on the landing page: a made-up video site, and the extension's own patron and
+     dissolve scripts (copied into ext/ by `make site`). Chrome's APIs are stubbed below. -->
+<style id="site-css">
+  #site { font: 14px/1.4 -apple-system, system-ui, sans-serif; color: #f1f1f1; background: #0f0f0f; min-height: 100vh; }
+  #site header { display: flex; align-items: center; gap: 16px; padding: 12px 20px; background: #181818; }
+  #site .logo { font-weight: 800; font-size: 20px; letter-spacing: -0.5px; }
+  #site .logo span { color: #ff4e45; }
+  #site .search { flex: 1; max-width: 420px; height: 32px; border-radius: 16px; background: #121212; border: 1px solid #303030; }
+  #site main { display: grid; grid-template-columns: minmax(0, 2fr) minmax(220px, 1fr); gap: 20px; padding: 18px 20px; }
+  #site .player { width: 100%; aspect-ratio: 16 / 9; border-radius: 12px; background: #000; display: block; }
+  #site h1 { font-size: 18px; margin: 10px 0 4px; }
+  #site .meta { color: #aaa; font-size: 13px; }
+  #site .side { display: grid; gap: 10px; align-content: start; }
+  #site .card { display: grid; grid-template-columns: 128px 1fr; gap: 8px; }
+  #site .thumb { aspect-ratio: 16 / 9; border-radius: 8px; }
+  #site .title { font-weight: 600; font-size: 13px; }
+</style>
+<style>
+  html, body { margin: 0; overflow: hidden; background: #0f0f0f; }
+</style>
+</head>
+<body>
+<div id="site">
+  <header>
+    <div class="logo">Scroll<span>scape</span></div>
+    <div class="search"></div>
+  </header>
+  <main>
+    <section>
+      <video class="player" id="player" muted playsinline></video>
+      <h1>You Won't Believe What This Cat Did Next (Part 47)</h1>
+      <div class="meta">3.2M views · 2 hours ago</div>
+    </section>
+    <aside class="side" id="side"></aside>
+  </main>
+</div>
+
+<script>
+  // The extension asks its background worker for a screenshot; here we draw the page ourselves.
+  globalThis.chrome = {
+    runtime: { sendMessage: async message => (message?.type === 'capture' ? snapshotPage() : null) },
+  };
+
+  const $ = id => document.getElementById(id);
+  const hues = [12, 200, 280, 40, 150, 330];
+  const titles = ['Top 10 Desk Setups', 'I Tried Every Snack', 'Speedrun Any%', 'Reacting to Reactions',
+    'Tiny Apartment Tour', 'The Ultimate Tier List'];
+  $('side').innerHTML = titles.map((t, i) =>
+    `<div class="card"><div class="thumb" style="background: linear-gradient(135deg, hsl(${hues[i]} 70% 55%), hsl(${hues[i] + 40} 60% 30%))"></div>` +
+    `<div><div class="title">${t}</div><div class="meta">${(i + 2) * 117}K views</div></div></div>`).join('');
+
+  // A real, playing <video> (fed by a canvas) so the hold has something to pause.
+  const frameCanvas = Object.assign(document.createElement('canvas'), { width: 640, height: 360 });
+  const fc = frameCanvas.getContext('2d');
+  (function paint(t) {
+    const g = fc.createLinearGradient(0, 0, 640, 360);
+    g.addColorStop(0, `hsl(${(t / 30) % 360} 70% 45%)`);
+    g.addColorStop(1, `hsl(${(t / 30 + 120) % 360} 70% 30%)`);
+    fc.fillStyle = g; fc.fillRect(0, 0, 640, 360);
+    fc.fillStyle = '#fff'; fc.font = 'bold 40px system-ui';
+    fc.fillText('▶ cat_video_47.mp4', 30, 330);
+    requestAnimationFrame(paint);
+  })(0);
+  const player = $('player');
+  player.srcObject = frameCanvas.captureStream(30);
+  player.play().catch(() => {});
+
+  // Stands in for chrome.tabs.captureVisibleTab: the page as an SVG <foreignObject> image, with the
+  // video swapped for a still of its current frame.
+  async function snapshotPage() {
+    const W = innerWidth, H = innerHeight;
+    const clone = $('site').cloneNode(true);
+    clone.querySelectorAll('video').forEach(v => {
+      const img = document.createElement('img');
+      img.className = v.className;
+      img.src = frameCanvas.toDataURL('image/jpeg', 0.85);
+      v.replaceWith(img);
+    });
+    const xhtml = new XMLSerializer().serializeToString(clone);
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">` +
+      `<foreignObject width="100%" height="100%"><div xmlns="http://www.w3.org/1999/xhtml" style="width:${W}px;height:${H}px;overflow:hidden">` +
+      `<style>${$('site-css').textContent}</style>${xhtml}</div></foreignObject></svg>`;
+    return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+  }
+</script>
+<script src="ext/dissolve.js"></script>
+<script src="ext/patron.js"></script>
+<script type="module">
+  import { PATRONS, LAYOUT, randomPhrase } from './ext/patrons.js';
+
+  const VEIL_MS = 6500;  // how long the veil stays before the next patron comes
+  let index = 0, timer = 0, run = 0;
+
+  // Sends `slug`'s patron in, then the next one once the veil has been up a while, forever.
+  function play(slug) {
+    clearTimeout(timer);
+    const mine = ++run;
+    if (slug) index = Math.max(0, PATRONS.findIndex(p => p.slug === slug));
+    const patron = PATRONS[index];
+    IntercedeDissolve.release();
+    document.getElementById('player').play().catch(() => {});
+    IntercedePatron.present({
+      sheetUrl: `ext/patrons/${patron.sheet}.png`,
+      layout: LAYOUT,
+      name: patron.name,
+      catchphrase: patron.catchphrase,
+      phrase: randomPhrase(patron, 'scrollscape.com'),
+      host: 'scrollscape.com',
+      returnDelayS: 3,
+    });
+    parent.postMessage({ type: 'intercede-demo', patron: patron.slug }, '*');
+    (function waitForVeil() {
+      if (mine !== run) return;
+      if (IntercedeDissolve.state !== 'veiled') { timer = setTimeout(waitForVeil, 250); return; }
+      timer = setTimeout(() => { index = (index + 1) % PATRONS.length; play(); }, VEIL_MS);
+    })();
+  }
+
+  addEventListener('message', event => {
+    if (event.data?.type === 'play') play(event.data.patron);
+  });
+  play();
+</script>
+</body>
+</html>

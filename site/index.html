@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Intercede — a patron saint for your browser</title>
+<meta name="description" content="Set a daily limit for the sites that eat your time. When it runs out, a pixel-art saint walks onto the page and sweeps it away.">
+<link rel="icon" href="ext/icon-128.png">
+<style>
+  :root {
+    --bg: #f4ecd8; --panel: #fffaf0; --text: #3b2a1a; --muted: #8a6a3a; --line: #3b2a1a;
+    --track: #e6d9b8; --accent: #e8c15a; --shadow: #3b2a1a; --dither: #e2d3ae;
+    --night: #16224a; --night-2: #3a588c;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    color-scheme: light;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 500 16px/1.55 var(--mono); }
+  /* Big darker pixels, in diagonal pairs, scattered across the page (as in the extension). */
+  body::before {
+    content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; opacity: .5;
+    background: var(--dither);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1440' height='1440'%3E%3Crect x='96' y='432' width='48' height='48'/%3E%3Crect x='144' y='480' width='48' height='48'/%3E%3Crect x='384' y='1152' width='48' height='48'/%3E%3Crect x='720' y='240' width='48' height='48'/%3E%3Crect x='768' y='192' width='48' height='48'/%3E%3Crect x='1056' y='864' width='48' height='48'/%3E%3Crect x='1104' y='912' width='48' height='48'/%3E%3Crect x='1296' y='96' width='48' height='48'/%3E%3Crect x='528' y='672' width='48' height='48'/%3E%3Crect x='576' y='624' width='48' height='48'/%3E%3Crect x='1248' y='1296' width='48' height='48'/%3E%3C/svg%3E") 0 0 / 1440px 1440px;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1440' height='1440'%3E%3Crect x='96' y='432' width='48' height='48'/%3E%3Crect x='144' y='480' width='48' height='48'/%3E%3Crect x='384' y='1152' width='48' height='48'/%3E%3Crect x='720' y='240' width='48' height='48'/%3E%3Crect x='768' y='192' width='48' height='48'/%3E%3Crect x='1056' y='864' width='48' height='48'/%3E%3Crect x='1104' y='912' width='48' height='48'/%3E%3Crect x='1296' y='96' width='48' height='48'/%3E%3Crect x='528' y='672' width='48' height='48'/%3E%3Crect x='576' y='624' width='48' height='48'/%3E%3Crect x='1248' y='1296' width='48' height='48'/%3E%3C/svg%3E") 0 0 / 1440px 1440px;
+  }
+  a { color: inherit; }
+  img.pixel, .sprite { image-rendering: pixelated; }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 0 16px; }
+  section { padding: 72px 0 0; }
+  h2 { font-size: 26px; margin: 0 0 8px; text-align: center; }
+  .sub { text-align: center; color: var(--muted); margin: 0 auto 32px; max-width: 36em; }
+  .frame { background: var(--panel); border: 2px solid var(--line); box-shadow: 6px 6px 0 var(--shadow); }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex; align-items: center; gap: 10px; padding: 14px 22px; text-decoration: none;
+    font: 700 16px/1 var(--mono); text-transform: uppercase; letter-spacing: .03em; color: #3b2a1a;
+    background: var(--accent); border: 2px solid var(--line); box-shadow: 4px 4px 0 var(--shadow);
+  }
+  .btn:hover { filter: brightness(1.06); }
+  .btn:active { transform: translate(4px, 4px); box-shadow: none; }
+  .btn.ghost { background: var(--panel); }
+  .btn svg { flex: none; }
+  .btn:focus-visible, button:focus-visible { outline: 3px dashed var(--accent); outline-offset: 4px; }
+
+  /* Hero */
+  .hero { padding: 64px 0 0; text-align: center; }
+  .hero img { width: 112px; height: 112px; }
+  .hero h1 { font-size: clamp(44px, 9vw, 76px); line-height: 1; margin: 12px 0 14px; letter-spacing: .02em; }
+  .tagline { font-size: clamp(18px, 3vw, 22px); font-weight: 700; margin: 0 0 12px; }
+  .hero .sub { margin-bottom: 30px; }
+  .ctas { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+  .fine { font-size: 13px; color: var(--muted); margin: 18px 0 0; }
+
+  /* Demo */
+  .browser { margin: 48px auto 0; max-width: 960px; }
+  .browser-bar { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-bottom: 2px solid var(--line); background: var(--track); }
+  .dots { display: flex; gap: 6px; }
+  .dots i { width: 12px; height: 12px; border: 2px solid var(--line); background: var(--panel); }
+  .dots i:first-child { background: #e0705a; } .dots i:nth-child(2) { background: var(--accent); } .dots i:last-child { background: #7cbf5a; }
+  .url { flex: 1; padding: 4px 10px; font-size: 13px; background: var(--panel); border: 2px solid var(--line); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .ext-icon { width: 22px; height: 22px; }
+  .viewport { position: relative; aspect-ratio: 960 / 600; overflow: hidden; background: #0f0f0f; }
+  .viewport iframe { position: absolute; top: 0; left: 0; width: 960px; height: 600px; border: 0; transform-origin: 0 0; }
+  .caption { text-align: center; font-size: 13px; color: var(--muted); margin: 14px 0 0; }
+
+  /* Steps */
+  .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px; }
+  .step { padding: 22px; }
+  .step b { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+  .step h3 { font-size: 18px; margin: 0 0 8px; }
+  .step p { margin: 0; font-size: 14px; }
+
+  /* Patrons */
+  .patrons { display: grid; grid-template-columns: repeat(auto-fit, minmax(176px, 1fr)); gap: 20px; }
+  .patron { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 18px 14px 16px; }
+  .patron .sprite { width: 127px; height: 150px; background-repeat: no-repeat; }
+  .patron h3 { font-size: 15px; margin: 10px 0 6px; }
+  .patron p { font-size: 13px; margin: 0 0 14px; flex: 1; }
+  .patron button {
+    font: 700 12px/1 var(--mono); text-transform: uppercase; padding: 8px 12px; cursor: pointer; color: #3b2a1a;
+    background: var(--accent); border: 2px solid var(--line);
+  }
+  .patron button:hover { filter: brightness(1.06); }
+  .patron.on { background: #fff3cf; }
+
+  /* Install */
+  .install { max-width: 640px; margin: 0 auto; padding: 24px 28px; }
+  .install ol { margin: 0; padding-left: 1.4em; }
+  .install li { margin: 0 0 10px; }
+  code { background: var(--track); padding: 1px 5px; font: inherit; font-size: .92em; }
+  .install .ctas { margin-top: 20px; }
+
+  footer { text-align: center; font-size: 13px; color: var(--muted); padding: 72px 0 40px; }
+</style>
+</head>
+<body>
+
+<header class="hero wrap">
+  <img class="pixel" src="ext/icon-128.png" alt="">
+  <h1>Intercede</h1>
+  <p class="tagline">A patron saint for your browser.</p>
+  <p class="sub">Set a daily limit for the sites that eat your time. When it runs out, a saint walks onto the page, raises a hand, and sweeps it away in a shower of pixels.</p>
+  <div class="ctas">
+    <a class="btn" href="intercede.zip" download>
+      <svg width="18" height="18" viewBox="0 0 9 9" fill="currentColor" shape-rendering="crispEdges" aria-hidden="true"><path d="M3 0h3v4h2v1H7v1H6v1H5v1H4V7H3V6H2V5H1V4h2zM0 8h9v1H0z"/></svg>
+      Download for Chrome
+    </a>
+    <a class="btn ghost" href="https://github.com/wyatt/bert">
+      <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0a8 8 0 0 0-2.53 15.59c.4.07.55-.17.55-.38v-1.33c-2.23.48-2.7-1.07-2.7-1.07-.36-.92-.89-1.17-.89-1.17-.73-.5.06-.49.06-.49.8.06 1.23.83 1.23.83.72 1.22 1.88.87 2.34.66.07-.52.28-.87.5-1.07-1.78-.2-3.65-.89-3.65-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.28.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48v2.2c0 .21.15.46.55.38A8 8 0 0 0 8 0z"/></svg>
+      View on GitHub
+    </a>
+  </div>
+  <p class="fine">Free and open source · No account, no servers, no tracking</p>
+
+  <div class="browser frame" id="demo">
+    <div class="browser-bar">
+      <div class="dots" aria-hidden="true"><i></i><i></i><i></i></div>
+      <div class="url">scrollscape.com/watch?v=cat-video-47</div>
+      <img class="ext-icon pixel" src="ext/icon-32.png" alt="Intercede extension">
+    </div>
+    <div class="viewport" id="viewport">
+      <iframe id="demo-frame" src="demo.html" title="Live demo: a patron sweeps away a video site" loading="lazy"></iframe>
+    </div>
+  </div>
+  <p class="caption">Live demo, running the extension's real code. Pick a saint below to send them in.</p>
+</header>
+
+<main class="wrap">
+  <section aria-labelledby="how-title">
+    <h2 id="how-title">How it works</h2>
+    <p class="sub">Gentle until it isn't.</p>
+    <div class="steps">
+      <div class="step frame">
+        <b>01</b>
+        <h3>Set your limits</h3>
+        <p>Pick the sites that pull you in and give each a daily allowance, like 30 minutes of YouTube.</p>
+      </div>
+      <div class="step frame">
+        <b>02</b>
+        <h3>Your patron steps in</h3>
+        <p>When time's up, your saint walks on, raises a hand to pause the page, says a word, and sweeps it away.</p>
+      </div>
+      <div class="step frame">
+        <b>03</b>
+        <h3>Return, if you must</h3>
+        <p>"Return anyway" unlocks after a short countdown. Stay over your limit and they'll come back to check on you.</p>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="patrons-title">
+    <h2 id="patrons-title">Meet the patrons</h2>
+    <p class="sub">Choose the saint who keeps you honest. Each has their own things to say.</p>
+    <div class="patrons" id="patrons"></div>
+  </section>
+
+  <section aria-labelledby="install-title" id="install">
+    <h2 id="install-title">Install in a minute</h2>
+    <p class="sub">Intercede isn't on the Chrome Web Store yet, so it installs by hand.</p>
+    <div class="install frame">
+      <ol>
+        <li><a href="intercede.zip" download>Download Intercede</a> and unzip it.</li>
+        <li>Open <code>chrome://extensions</code> and turn on <b>Developer mode</b> (top right).</li>
+        <li>Click <b>Load unpacked</b> and choose the unzipped folder.</li>
+        <li>Pin Intercede to your toolbar, set your sites, and choose your patron.</li>
+      </ol>
+      <div class="ctas">
+        <a class="btn" href="intercede.zip" download>Download for Chrome</a>
+        <a class="btn ghost" href="https://github.com/wyatt/bert">View on GitHub</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>Made by <a href="https://wyattsell.com">Wyatt Sell</a> · <a href="https://github.com/wyatt/bert">GitHub</a></footer>
+
+<script type="module">
+  import { PATRONS, LAYOUT, frameIndex } from './ext/patrons.js';
+
+  // The demo renders at 960×600 and is scaled to fit its frame.
+  const viewport = document.getElementById('viewport'), frame = document.getElementById('demo-frame');
+  new ResizeObserver(() => { frame.style.transform = `scale(${viewport.clientWidth / 960})`; }).observe(viewport);
+
+  // Patron cards, each idling.
+  const scale = 150 / LAYOUT.frameHeight;
+  const cards = PATRONS.map(patron => {
+    const card = document.createElement('article');
+    card.className = 'patron frame';
+    card.innerHTML = '<div class="sprite" role="img"></div><h3></h3><p></p><button type="button">Send in ▸</button>';
+    const sprite = card.querySelector('.sprite');
+    sprite.setAttribute('aria-label', patron.name);
+    sprite.style.backgroundImage = `url("ext/patrons/${patron.sheet}.png")`;
+    sprite.style.backgroundSize = `${LAYOUT.cols * LAYOUT.frameWidth * scale}px ${LAYOUT.rows * LAYOUT.frameHeight * scale}px`;
+    card.querySelector('h3').textContent = patron.name;
+    card.querySelector('p').textContent = `“${patron.catchphrase}”`;
+    card.querySelector('button').addEventListener('click', () => {
+      frame.contentWindow.postMessage({ type: 'play', patron: patron.slug }, location.origin === 'null' ? '*' : location.origin);
+      document.getElementById('demo').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+    document.getElementById('patrons').append(card);
+    return { patron, card, sprite, offset: Math.random() * 2000 };
+  });
+
+  // The demo says which patron is on; highlight their card.
+  addEventListener('message', event => {
+    if (event.source !== frame.contentWindow || event.data?.type !== 'intercede-demo') return;
+    for (const c of cards) c.card.classList.toggle('on', c.patron.slug === event.data.patron);
+  });
+
+  (function animate(now) {
+    const clip = LAYOUT.clips.idle;
+    for (const c of cards) {
+      c.sprite.style.backgroundPosition = `${-frameIndex(clip, now + c.offset) * LAYOUT.frameWidth * scale}px ${-clip.row * LAYOUT.frameHeight * scale}px`;
+    }
+    requestAnimationFrame(animate);
+  })(performance.now());
+</script>
+</body>
+</html>

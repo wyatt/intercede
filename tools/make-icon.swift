@@ -1,54 +1,63 @@
-// Builds the app icon: a pixel-art mountain under a golden halo, on a midnight-blue squircle.
-// The scene is a 32×32 grid drawn as hard-edged blocks (to match the pixel-art patrons), rendered
-// at 1024 px and scaled down for the smaller sizes. Writes an .iconset and converts it with iconutil.
+// Builds the app and extension icons: God's hand from Michelangelo's *Creation of Adam*, reaching
+// left with the spark of life at his fingertip, in pixel art against a night sky. The scene is a
+// 32×32 grid drawn as hard-edged blocks (to match the pixel-art patrons), rendered at 1024 px and
+// scaled down for the smaller sizes. Writes an .iconset and converts it with iconutil, and with a
+// second argument also writes the extension's icon-{16,32,48,128}.png there.
 //
-// usage: swift tools/make-icon.swift <out.icns>
+// usage: swift tools/make-icon.swift <out.icns> [extension-icons-dir]
 import CoreGraphics
 import Foundation
 import ImageIO
 import UniformTypeIdentifiers
 
-guard CommandLine.arguments.count == 2 else {
-    print("usage: make-icon.swift <out.icns>"); exit(1)
+guard (2...3).contains(CommandLine.arguments.count) else {
+    print("usage: make-icon.swift <out.icns> [extension-icons-dir]"); exit(1)
 }
 
 typealias RGB = (r: Int, g: Int, b: Int)
 let skyTop: RGB = (22, 34, 72), skyBottom: RGB = (58, 88, 140)
 let star: RGB = (200, 214, 240)
-let gold: RGB = (232, 193, 90)
-let farPeak: RGB = (28, 42, 80)
-let rockLit: RGB = (112, 128, 168), rockShade: RGB = (72, 88, 128)
-let snowLit: RGB = (243, 245, 250), snowShade: RGB = (196, 208, 230)
-let hills: RGB = (20, 32, 62)
+let gold: RGB = (232, 193, 90), spark: RGB = (255, 248, 220)
+let outline: RGB = (70, 40, 34)
+let skin: RGB = (240, 196, 150), skinShade: RGB = (204, 148, 108)
+let robe: RGB = (198, 136, 168), robeShade: RGB = (150, 94, 130)
+let hills: RGB = (20, 32, 62)  // the squircle's base colour, under its drop shadow
 
 let grid = 32
 
+// The hand, from row 9 down. O outline, S/s skin lit/shaded, R/r robe lit/shaded, . sky.
+let handTop = 9
+let hand: [String] = [
+    ".........................OOOOOOO",
+    "........................ORRRRRRR",
+    "..................OOOOOOORRRRRRR",
+    "................OOSSSSSSORRRRRRR",
+    "......OOOOOOOOOOSSSSSSSSORRRRRRR",
+    ".....OSSSSSSSSSSSSSSSSSSORRRRRRR",
+    ".....OssssssssssSSSSSSSSORRRRRRR",
+    "......OOOOOOOOOOSSSSSSSSORRRRRRR",
+    "...........OSSSSSSSSSSSSOrRRRRRR",
+    "...........OssSSSSSSSSSsOrrRRRRR",
+    "............OOOSSSSSSSsOOOOrrRRR",
+    "...............OSSSSSsO....OOrrR",
+    "...............OssSSsO......OOrr",
+    "................OOOSsO.......OOO",
+    "...................OO...........",
+]
+let palette: [Character: RGB] = ["O": outline, "S": skin, "s": skinShade, "R": robe, "r": robeShade]
+
 /// Colour of grid cell (x, y), y growing downward.
 func cell(_ x: Int, _ y: Int) -> RGB {
-    let fx = Double(x) + 0.5, fy = Double(y) + 0.5
+    let row = y - handTop
+    if hand.indices.contains(row), let c = palette[Array(hand[row])[x]] { return c }
 
-    // Foreground hills.
-    if fy > 27 + 1.2 * sin(fx / 3.2) { return hills }
-
-    // Main peak: apex at (16, 9), slope 1; lit on the left, shaded on the right.
-    let apexX = 16.0, apexY = 9.0
-    let half = fy - apexY
-    if half >= 0 && abs(fx - apexX) <= half + 0.5 {
-        let lit = fx <= apexX
-        let snowLine = apexY + 5 + (x % 3 == 0 ? 1 : 0) + (x % 5 == 1 ? -1 : 0)  // jagged edge
-        if fy < snowLine { return lit ? snowLit : snowShade }
-        return lit ? rockLit : rockShade
-    }
-
-    // Flanking peaks behind.
-    if fy > 15 + abs(fx - 6) * 1.1 || fy > 14 + abs(fx - 27) * 1.0 { return farPeak }
-
-    // Halo over the summit.
-    let hx = (fx - 16) / 5.0, hy = (fy - 4.5) / 1.8
-    if abs(sqrt(hx * hx + hy * hy) - 1) < 0.22 { return gold }
+    // The spark of life, in the gap before his fingertip.
+    if (x, y) == (2, 14) { return spark }
+    if [(2, 13), (1, 14), (3, 14), (2, 15)].contains(where: { $0 == (x, y) }) { return gold }
+    if [(4, 11), (0, 12)].contains(where: { $0 == (x, y) }) { return spark }
 
     // A few stars, then the sky gradient in coarse bands.
-    if [(4, 3), (26, 5), (9, 8), (29, 10), (22, 2), (2, 11)].contains(where: { $0 == (x, y) }) { return star }
+    if [(4, 3), (26, 5), (9, 7), (20, 3), (14, 2), (2, 27), (24, 28), (11, 29), (29, 25)].contains(where: { $0 == (x, y) }) { return star }
     let t = Double(y / 4) / Double(grid / 4)
     return (skyTop.r + Int(Double(skyBottom.r - skyTop.r) * t),
             skyTop.g + Int(Double(skyBottom.g - skyTop.g) * t),
@@ -120,6 +129,17 @@ for base in [16, 32, 128, 256, 512] {
         CGImageDestinationFinalize(dest)
     }
 }
+func writePNG(_ image: CGImage, _ url: URL) {
+    let dest = CGImageDestinationCreateWithURL(url as CFURL, UTType.png.identifier as CFString, 1, nil)!
+    CGImageDestinationAddImage(dest, image, nil)
+    CGImageDestinationFinalize(dest)
+}
+if CommandLine.arguments.count == 3 {
+    let dir = URL(fileURLWithPath: CommandLine.arguments[2])
+    for size in [16, 32, 48, 128] { writePNG(render(size: size), dir.appendingPathComponent("icon-\(size).png")) }
+    print("wrote extension icons to \(dir.path)")
+}
+
 let p = Process()
 p.executableURL = URL(fileURLWithPath: "/usr/bin/iconutil")
 p.arguments = ["-c", "icns", iconset.path, "-o", out.path]

@@ -3,7 +3,7 @@
 // Same beats and timings as the Mac app's NudgeScene.
 //
 // Injected on demand by the background worker after dissolve.js:
-//   IntercedePatron.present({ sheetUrl, layout, name, catchphrase, phrase, host })
+//   IntercedePatron.present({ sheetUrl, layout, name, catchphrase, phrase, host, returnDelayS? })
 (() => {
   if (globalThis.IntercedePatron) return;
 
@@ -40,10 +40,11 @@
   }
 
   class Scene {
-    constructor({ sheetUrl, layout, name, catchphrase, phrase, host }) {
+    constructor({ sheetUrl, layout, name, catchphrase, phrase, host, returnDelayS }) {
       this.layout = layout;
       this.siteHost = host;  // the tracked site he came about (null for a test)
       this.words = { patronName: name, catchphrase, phrase };  // also shown on the veil
+      this.returnDelayS = returnDelayS;  // undefined: the dissolve's default
       this.scale = SPRITE_HEIGHT / layout.frameHeight;
       this.width = Math.round(layout.frameWidth * this.scale);
       this.offstage = -this.width - 20;
@@ -166,6 +167,7 @@
       this.frozen = false;
       const done = IntercedeDissolve.dissolve({
         ...this.words,
+        ...(this.returnDelayS !== undefined && { returnDelayS: this.returnDelayS }),
         snapshot,
         origin: { x: at.x + at.width * 0.7, y: at.y + at.height * 0.35 },  // his raised hand
         durationMs: this.clipMs('dismiss') + 150 + this.clipMs('settle') + 700,
