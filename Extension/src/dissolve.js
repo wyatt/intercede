@@ -40,6 +40,7 @@
     .card { max-width: 30em; padding: 2em; text-align: center; opacity: 0; transform: translateY(6px);
             transition: opacity 500ms ease, transform 500ms ease; }
     .card.on { opacity: 1; transform: none; }
+    .card:focus { outline: none; }
     .catchphrase { font-size: 1.5em; font-weight: 700; margin: 0 0 0.6em; }
     .phrase { margin: 0 0 0.4em; }
     .patron { margin: 0 0 1.8em; color: #8A6A3A; font-size: 0.85em; }
@@ -110,7 +111,7 @@
     dim?.remove(); dim = null;
     veil.layer.style.opacity = '1';
     veil.card.classList.add('on');
-    veil.button.focus({ preventScroll: true });
+    veil.card.focus({ preventScroll: true });  // off the page beneath, but not on the button
     lockReturn(veil.button, opts.returnDelayS);
     state = 'veiled';
     return { ok: true, mode: snapshot ? 'scatter' : 'cover', reduced };
@@ -307,6 +308,7 @@
     const layer = el('div', 'layer veil');
     const card = el('div', 'card');
     card.setAttribute('role', 'dialog');
+    card.tabIndex = -1;
     card.setAttribute('aria-label', 'Page dismissed by your patron');
     if (opts.catchphrase) card.append(el('p', 'catchphrase', opts.catchphrase));
     if (opts.phrase) card.append(el('p', 'phrase', opts.phrase));
