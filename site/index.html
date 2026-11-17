@@ -84,12 +84,19 @@
   .patron span { font-size: 12px; line-height: 1.35; color: var(--muted); margin-top: 3px; }
   .patron.on b { text-decoration: underline 3px var(--accent); text-underline-offset: 4px; }
 
-  /* Install */
-  .install { max-width: 640px; margin: 0 auto; padding: 24px 28px; }
+  /* Install modal */
+  .install { width: min(600px, calc(100vw - 32px)); padding: 26px 28px 28px; color: var(--text); }
+  .install::backdrop { background: rgba(24, 12, 32, .45); }
+  .install h2 { text-align: left; margin-bottom: 4px; }
+  .install .sub { text-align: left; margin: 0 0 18px; }
   .install ol { margin: 0; padding-left: 1.4em; }
   .install li { margin: 0 0 10px; }
+  .install .ctas { justify-content: flex-start; margin-top: 22px; }
+  .install .close {
+    position: absolute; top: 10px; right: 10px; width: 32px; height: 32px; cursor: pointer;
+    font: 700 18px/1 var(--mono); color: var(--text); background: none; border: none;
+  }
   code { background: var(--track); padding: 1px 5px; font: inherit; font-size: .92em; }
-  .install .ctas { margin-top: 20px; }
 
   footer { text-align: center; font-size: 13px; color: var(--muted); padding: 72px 0 40px; }
 </style>
@@ -102,7 +109,7 @@
   <p class="tagline">A patron saint for your browser.</p>
   <p class="sub">Set a daily limit for the sites that eat your time. When it runs out, a saint walks onto the page, raises a hand, and sweeps it away in a shower of pixels.</p>
   <div class="ctas">
-    <a class="btn" href="intercede.zip" download>
+    <a class="btn" href="intercede.zip" id="get" download>
       <svg width="18" height="18" viewBox="0 0 9 9" fill="currentColor" shape-rendering="crispEdges" aria-hidden="true"><path d="M3 0h3v4h2v1H7v1H6v1H5v1H4V7H3V6H2V5H1V4h2zM0 8h9v1H0z"/></svg>
       Download for Chrome
     </a>
@@ -150,28 +157,34 @@
     </div>
   </section>
 
-  <section aria-labelledby="install-title" id="install">
-    <h2 id="install-title">Install in a minute</h2>
-    <p class="sub">Intercede isn't on the Chrome Web Store yet, so it installs by hand.</p>
-    <div class="install frame">
-      <ol>
-        <li><a href="intercede.zip" download>Download Intercede</a> and unzip it.</li>
-        <li>Open <code>chrome://extensions</code> and turn on <b>Developer mode</b> (top right).</li>
-        <li>Click <b>Load unpacked</b> and choose the unzipped folder.</li>
-        <li>Pin Intercede to your toolbar, set your sites, and choose your patron.</li>
-      </ol>
-      <div class="ctas">
-        <a class="btn" href="intercede.zip" download>Download for Chrome</a>
-        <a class="btn ghost" href="https://github.com/wyatt/bert">View on GitHub</a>
-      </div>
-    </div>
-  </section>
 </main>
+
+<dialog class="install frame" id="install" aria-labelledby="install-title">
+  <button class="close" type="button" aria-label="Close">✕</button>
+  <h2 id="install-title">Install in a minute</h2>
+  <p class="sub">Intercede isn't on the Chrome Web Store yet, so it installs by hand.</p>
+  <ol>
+    <li><a href="intercede.zip" download>Download Intercede</a> and unzip it.</li>
+    <li>Open <code>chrome://extensions</code> and turn on <b>Developer mode</b> (top right).</li>
+    <li>Click <b>Load unpacked</b> and choose the unzipped folder.</li>
+    <li>Pin Intercede to your toolbar, set your sites, and choose your patron.</li>
+  </ol>
+  <div class="ctas">
+    <a class="btn" href="intercede.zip" download>Download</a>
+    <a class="btn ghost" href="https://github.com/wyatt/bert">View on GitHub</a>
+  </div>
+</dialog>
 
 <footer>Made by <a href="https://wyattsell.com">Wyatt Sell</a> · <a href="https://github.com/wyatt/bert">GitHub</a></footer>
 
 <script type="module">
   import { PATRONS, LAYOUT, frameIndex } from './ext/patrons.js';
+
+  // "Download for Chrome" opens the install steps (the link itself still downloads without JS).
+  const install = document.getElementById('install');
+  document.getElementById('get').addEventListener('click', event => { event.preventDefault(); install.showModal(); });
+  install.querySelector('.close').addEventListener('click', () => install.close());
+  install.addEventListener('click', event => { if (event.target === install) install.close(); });  // the backdrop
 
   // The demo renders at 960×600 and is scaled to fit its frame.
   const viewport = document.getElementById('viewport'), frame = document.getElementById('demo-frame');
