@@ -10,7 +10,6 @@ struct SiteConfig: Codable, Identifiable, Equatable {
         SiteConfig(host: "youtube.com", dailyBudgetSeconds: 15 * 60),
         SiteConfig(host: "instagram.com", dailyBudgetSeconds: 15 * 60),
         SiteConfig(host: "x.com", dailyBudgetSeconds: 15 * 60),
-        SiteConfig(host: "twitter.com", dailyBudgetSeconds: 15 * 60),
         SiteConfig(host: "reddit.com", dailyBudgetSeconds: 15 * 60),
         SiteConfig(host: "tiktok.com", dailyBudgetSeconds: 15 * 60),
         SiteConfig(host: "facebook.com", dailyBudgetSeconds: 15 * 60),

@@ -2,7 +2,7 @@
 // tested in Node. Mirrors the rules in Intercede/Usage/UsageTracker.swift.
 
 export const DEFAULT_SITES = [
-  'youtube.com', 'instagram.com', 'x.com', 'twitter.com', 'reddit.com', 'tiktok.com', 'facebook.com',
+  'youtube.com', 'instagram.com', 'x.com', 'reddit.com', 'tiktok.com', 'facebook.com',
 ].map(host => ({ host, dailyBudgetSeconds: 15 * 60 }));
 
 export const BREACH_COOLDOWN_MS = 5 * 60 * 1000;

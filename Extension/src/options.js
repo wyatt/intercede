@@ -27,7 +27,7 @@ function renderSites() {
       <span class="host"></span>
       <input type="number" min="1" max="1440" step="1">
       <span class="unit muted">min / day</span>
-      <button class="remove" type="button">Remove</button>`;
+      <button class="remove" type="button" title="Remove">−</button>`;
     row.querySelector('.host').textContent = site.host;
     const minutes = row.querySelector('input');
     minutes.value = Math.round(site.dailyBudgetSeconds / 60);
