@@ -150,14 +150,14 @@
     }
 
     async dissolvePage() {
-      // Snapshot the page without the patron in it, then dissolve; he stays above the veil.
-      this.host.style.visibility = 'hidden';
-      await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+      // Snapshot the page with him still on it (hiding him would flash), and have the dissolve
+      // leave his area out of it so no copy of him drifts away; he stays above the veil.
+      const keepOut = [this.sprite, this.bubble].map(node => node.getBoundingClientRect());
       const snapshot = await chrome.runtime.sendMessage({ type: 'capture' }).catch(() => null);
-      this.host.style.visibility = '';
       const done = IntercedeDissolve.dissolve({
         ...this.words,
         snapshot,
+        keepOut,
         durationMs: this.clipMs('dismiss') + 150 + this.clipMs('settle'),
         onReturn: () => chrome.runtime.sendMessage({ type: 'returnAnyway' }).catch(() => {}),
       });

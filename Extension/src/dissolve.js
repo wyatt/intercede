@@ -97,7 +97,7 @@
     root.append(veil.layer);
 
     const reduced = opts.reducedMotion ?? matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (reduced) await fadeOut(snapshot, veil);
+    if (reduced) await fadeOut(snapshot, veil, opts);
     else await animateTiles(snapshot, veil, opts);
     if (state !== 'dissolving') return { ok: false, reason: 'released' };  // release() mid-effect
 
@@ -137,6 +137,7 @@
     const scatter = !!snapshot;
     if (scatter) {
       b.drawImage(snapshot, 0, 0, W, H);
+      for (const r of opts.keepOut ?? []) b.clearRect(r.x, r.y, r.width, r.height);
     } else {
       veil.layer.style.opacity = '0';    // live page stays visible until the tiles cover it
     }
@@ -145,6 +146,7 @@
     const sx = scatter ? (snapshot.naturalWidth || snapshot.width) / W : 0;
     const sy = scatter ? (snapshot.naturalHeight || snapshot.height) / H : 0;
     const tiles = schedule(W, H, t, opts);
+    for (const tile of tiles) tile.kept = (opts.keepOut ?? []).some(r => overlaps(tile, t, r));
     let next = 0;
     const live = [];
     const start = performance.now();
@@ -168,7 +170,7 @@
             live.splice(i, 1);
             continue;
           }
-          if (scatter) drawDrifting(f, tile, q, t, snapshot, sx, sy);
+          if (scatter && !tile.kept) drawDrifting(f, tile, q, t, snapshot, sx, sy);
           else drawSettling(f, tile, q, t);
         }
 
@@ -231,11 +233,12 @@
   }
 
   // prefers-reduced-motion: no particles, just a short crossfade to the veil.
-  function fadeOut(snapshot, veil) {
+  function fadeOut(snapshot, veil, opts) {
     const W = innerWidth, H = innerHeight, dpr = window.devicePixelRatio || 1;
     const c = canvas(W, H, dpr);
     if (snapshot) {
       const g = c.getContext('2d'); g.scale(dpr, dpr); g.drawImage(snapshot, 0, 0, W, H);
+      for (const r of opts.keepOut ?? []) g.clearRect(r.x, r.y, r.width, r.height);
       root.append(c);
     } else {
       veil.layer.style.opacity = '0';
@@ -291,6 +294,9 @@
       label.textContent = 'Return anyway';
     }, 1000);
   }
+
+  const overlaps = (tile, t, r) =>
+    tile.x < r.x + r.width && tile.x + t > r.x && tile.y < r.y + r.height && tile.y + t > r.y;
 
   function canvas(W, H, dpr) {
     const c = document.createElement('canvas');
