@@ -1,4 +1,4 @@
-.PHONY: ext-test sprites icon site site-serve
+.PHONY: ext-test sprites icon site site-serve store
 
 # Chrome extension unit tests (Node 18+)
 ext-test:
@@ -19,15 +19,14 @@ sprites:
 icon:
 	swift tools/make-icon.swift Extension/icons
 
-# Build the landing page: copy the extension's scripts, sprites and icons into site/ext (for the
-# live demo) and zip the extension for download. Deploy the site/ folder as static files.
+# Build the landing page: the demo's copy of the extension (site/ext) and the download zip
+# (site/intercede.zip). Vercel runs the same script (vercel.json).
 site:
-	rm -rf site/ext site/intercede.zip
-	mkdir -p site/ext/patrons
-	cp Extension/src/dissolve.js Extension/src/patron.js Extension/src/patrons.js site/ext/
-	cp Extension/patrons/*.png site/ext/patrons/
-	cp Extension/icons/icon-32.png Extension/icons/icon-128.png site/ext/
-	cd Extension && zip -qr ../site/intercede.zip . -x 'dev/*' 'test/*' '.DS_Store'
+	node tools/build.mjs site
+
+# The Chrome Web Store upload: dist/intercede-<version>.zip (no manifest key, no dev/ or test/)
+store:
+	node tools/build.mjs store
 
 site-serve: site
 	cd site && python3 -m http.server 8000

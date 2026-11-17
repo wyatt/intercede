@@ -165,6 +165,3 @@ chrome.runtime.onMessage.addListener((message, sender, reply) => {
       return;
   }
 });
-
-// Debug handle for the service worker console / automated checks.
-globalThis.intercede = { refresh: () => serial(refresh), nudge };
