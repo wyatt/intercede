@@ -7,7 +7,7 @@
 // closes it and credits the elapsed time. A one-minute alarm flushes it periodically, which also
 // caps how much time an unobserved gap (e.g. the Mac sleeping) can add.
 
-import { DEFAULT_SITES, credit, dayKey } from './tracker.js';
+import { DEFAULT_SITES, BREACH_COOLDOWN_MS, credit, dayKey } from './tracker.js';
 import { LAYOUT, patronFor, randomPhrase, DEFAULT_PATRON } from './patrons.js';
 
 const FLUSH_MINUTES = 1;
@@ -16,8 +16,12 @@ const MAX_INTERVAL_S = 90;  // longer than this between flushes means we weren't
 // ── Storage ──────────────────────────────────────────────────────────────────
 
 async function settings() {
-  const { sites, patron } = await chrome.storage.sync.get(['sites', 'patron']);
-  return { sites: sites ?? DEFAULT_SITES, patron: patron ?? DEFAULT_PATRON };
+  const { sites, patron, cooldownMinutes } = await chrome.storage.sync.get(['sites', 'patron', 'cooldownMinutes']);
+  return {
+    sites: sites ?? DEFAULT_SITES,
+    patron: patron ?? DEFAULT_PATRON,
+    cooldownMs: cooldownMinutes ? cooldownMinutes * 60 * 1000 : BREACH_COOLDOWN_MS,
+  };
 }
 
 const usageKey = date => `usage:${dayKey(date)}`;
@@ -56,10 +60,10 @@ async function refresh() {
 }
 
 async function creditTime(host, tabId, seconds, now) {
-  const { sites } = await settings();
+  const { sites, cooldownMs } = await settings();
   const key = usageKey(now);
   const stored = await chrome.storage.local.get([key, 'lastBreach']);
-  const result = credit({ usage: stored[key], sites, host, seconds, now: now.getTime(), lastBreach: stored.lastBreach ?? {} });
+  const result = credit({ usage: stored[key], sites, host, seconds, now: now.getTime(), lastBreach: stored.lastBreach ?? {}, cooldownMs });
   await chrome.storage.local.set({ [key]: result.usage, lastBreach: result.lastBreach });
   if (result.breach) nudge(tabId, result.breach.host);
 }

@@ -5,7 +5,7 @@ export const DEFAULT_SITES = [
   'youtube.com', 'instagram.com', 'x.com', 'reddit.com', 'tiktok.com', 'facebook.com',
 ].map(host => ({ host, dailyBudgetSeconds: 15 * 60 }));
 
-export const BREACH_COOLDOWN_MS = 5 * 60 * 1000;
+export const BREACH_COOLDOWN_MS = 5 * 60 * 1000;  // default; the user can change it
 export const MINUTE_RANGE = [1, 1440];
 
 /** Lowercased, without a leading "www.". */
@@ -53,13 +53,13 @@ export function secondsUsed(usage, sites, host) {
  * Credits `seconds` on `host` to today's usage. Returns the updated usage and, if this pushed the
  * site over budget and it's outside the cooldown, the site to nudge about (and the updated cooldowns).
  */
-export function credit({ usage = {}, sites, host, seconds, now, lastBreach = {} }) {
+export function credit({ usage = {}, sites, host, seconds, now, lastBreach = {}, cooldownMs = BREACH_COOLDOWN_MS }) {
   const site = siteFor(sites, host);
   if (!site || !(seconds > 0)) return { usage, breach: null, lastBreach };
   const key = normalizeHost(site.host);
   const next = { ...usage, [key]: (usage[key] ?? 0) + seconds };
   if (next[key] < site.dailyBudgetSeconds) return { usage: next, breach: null, lastBreach };
-  if (lastBreach[key] !== undefined && now - lastBreach[key] < BREACH_COOLDOWN_MS) {
+  if (lastBreach[key] !== undefined && now - lastBreach[key] < cooldownMs) {
     return { usage: next, breach: null, lastBreach };
   }
   return { usage: next, breach: site, lastBreach: { ...lastBreach, [key]: now } };

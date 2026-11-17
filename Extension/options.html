@@ -29,6 +29,8 @@
   .remove:hover { color: var(--over); border-color: var(--over); filter: none; }
   .add { display: flex; gap: 10px; padding: 12px; background: var(--track); border-top: 2px solid var(--line); }
   .add input { flex: 1; }
+  .cooldown { display: block; font-weight: 500; margin-top: 4px; }
+  .cooldown input { width: 64px; margin: 0 4px; text-align: right; font-variant-numeric: tabular-nums; }
   .error { color: var(--over); font-size: 13px; margin: 10px 2px 0; min-height: 1em; }
   .empty { padding: 14px 12px; border-bottom: 2px dashed var(--track); }
 
@@ -63,6 +65,9 @@
       </form>
     </div>
     <p class="error" id="add-error" role="alert"></p>
+    <label class="cooldown">Once you're over a limit, your patron comes back every
+      <input id="cooldown" type="number" min="1" max="1440" step="1" aria-label="Minutes between visits"> min
+    </label>
   </section>
 
   <section aria-labelledby="patron-title">

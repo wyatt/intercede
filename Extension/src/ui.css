@@ -11,6 +11,7 @@
   --over: #c8402f;
   --accent: #e8c15a;    /* gold */
   --shadow: #3b2a1a;
+  --dither: #e2d3ae;    /* parchment, a shade darker */
   --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   color-scheme: light dark;
 }
@@ -25,6 +26,7 @@
     --ok: #7cc45a;
     --over: #ff6a55;
     --shadow: #0d0b09;
+    --dither: #2b261f;
   }
 }
 
@@ -38,6 +40,14 @@ body {
 h1, h2, button, label, .label { font-weight: 700; }
 input, select { font: inherit; color: inherit; }
 .muted { color: var(--muted); }
+
+/* A dithered ground: large pixels in a darker shade, thickening towards the bottom of the window. */
+body::before {
+  content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background: var(--dither);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%' height='100%'%3E%3Cdefs%3E%3Cpattern id='d1' width='16' height='16' patternUnits='userSpaceOnUse'%3E%3Crect x='0' y='0' width='4' height='4'/%3E%3C/pattern%3E%3Cpattern id='d2' width='16' height='16' patternUnits='userSpaceOnUse'%3E%3Crect x='0' y='0' width='4' height='4'/%3E%3Crect x='8' y='8' width='4' height='4'/%3E%3C/pattern%3E%3Cpattern id='d4' width='16' height='16' patternUnits='userSpaceOnUse'%3E%3Crect x='0' y='0' width='4' height='4'/%3E%3Crect x='8' y='0' width='4' height='4'/%3E%3Crect x='0' y='8' width='4' height='4'/%3E%3Crect x='8' y='8' width='4' height='4'/%3E%3C/pattern%3E%3Cpattern id='d6' width='16' height='16' patternUnits='userSpaceOnUse'%3E%3Crect x='0' y='0' width='4' height='4'/%3E%3Crect x='8' y='0' width='4' height='4'/%3E%3Crect x='4' y='4' width='4' height='4'/%3E%3Crect x='0' y='8' width='4' height='4'/%3E%3Crect x='8' y='8' width='4' height='4'/%3E%3Crect x='12' y='12' width='4' height='4'/%3E%3C/pattern%3E%3C/defs%3E%3Crect y='55%' width='100%' height='15%' fill='url%28%23d1%29'/%3E%3Crect y='70%' width='100%' height='12%' fill='url%28%23d2%29'/%3E%3Crect y='82%' width='100%' height='10%' fill='url%28%23d4%29'/%3E%3Crect y='92%' width='100%' height='8%' fill='url%28%23d6%29'/%3E%3C/svg%3E") 0 0 / 100% 100%;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%' height='100%'%3E%3Cdefs%3E%3Cpattern id='d1' width='16' height='16' patternUnits='userSpaceOnUse'%3E%3Crect x='0' y='0' width='4' height='4'/%3E%3C/pattern%3E%3Cpattern id='d2' width='16' height='16' patternUnits='userSpaceOnUse'%3E%3Crect x='0' y='0' width='4' height='4'/%3E%3Crect x='8' y='8' width='4' height='4'/%3E%3C/pattern%3E%3Cpattern id='d4' width='16' height='16' patternUnits='userSpaceOnUse'%3E%3Crect x='0' y='0' width='4' height='4'/%3E%3Crect x='8' y='0' width='4' height='4'/%3E%3Crect x='0' y='8' width='4' height='4'/%3E%3Crect x='8' y='8' width='4' height='4'/%3E%3C/pattern%3E%3Cpattern id='d6' width='16' height='16' patternUnits='userSpaceOnUse'%3E%3Crect x='0' y='0' width='4' height='4'/%3E%3Crect x='8' y='0' width='4' height='4'/%3E%3Crect x='4' y='4' width='4' height='4'/%3E%3Crect x='0' y='8' width='4' height='4'/%3E%3Crect x='8' y='8' width='4' height='4'/%3E%3Crect x='12' y='12' width='4' height='4'/%3E%3C/pattern%3E%3C/defs%3E%3Crect y='55%' width='100%' height='15%' fill='url%28%23d1%29'/%3E%3Crect y='70%' width='100%' height='12%' fill='url%28%23d2%29'/%3E%3Crect y='82%' width='100%' height='10%' fill='url%28%23d4%29'/%3E%3Crect y='92%' width='100%' height='8%' fill='url%28%23d6%29'/%3E%3C/svg%3E") 0 0 / 100% 100%;
+}
 
 /* A pixel frame: hard edges and a hard drop shadow. */
 .frame {
