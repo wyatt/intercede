@@ -3,7 +3,7 @@
 // The beats: walk in, hold, speak, sweep, settle, and walk out when clicked.
 //
 // Injected on demand by the background worker after dissolve.js:
-//   IntercedePatron.present({ sheetUrl, layout, name, catchphrase, phrase, host, returnDelayS? })
+//   IntercedePatron.present({ sheetUrl, layout, name, catchphrase, phrase, host, returnDelayS?, dissolve? })
 (() => {
   if (globalThis.IntercedePatron) return;
 
@@ -40,11 +40,12 @@
   }
 
   class Scene {
-    constructor({ sheetUrl, layout, name, catchphrase, phrase, host, returnDelayS }) {
+    constructor({ sheetUrl, layout, name, catchphrase, phrase, host, returnDelayS, dissolve }) {
       this.layout = layout;
       this.siteHost = host;  // the tracked site he came about (null for a test)
       this.words = { patronName: name, catchphrase, phrase };  // also shown on the veil
       this.returnDelayS = returnDelayS;  // undefined: the dissolve's default
+      this.dissolveOptions = dissolve;   // e.g. coarser tiles for the landing page's scaled-down demo
       this.scale = SPRITE_HEIGHT / layout.frameHeight;
       this.width = Math.round(layout.frameWidth * this.scale);
       this.offstage = -this.width - 20;
@@ -168,6 +169,7 @@
       const done = IntercedeDissolve.dissolve({
         ...this.words,
         ...(this.returnDelayS !== undefined && { returnDelayS: this.returnDelayS }),
+        ...this.dissolveOptions,
         snapshot,
         origin: { x: at.x + at.width * 0.7, y: at.y + at.height * 0.35 },  // his raised hand
         durationMs: this.clipMs('dismiss') + 150 + this.clipMs('settle') + 700,

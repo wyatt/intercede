@@ -53,6 +53,7 @@
       phrase: randomPhrase(patron, 'youtube.com'),
       host: 'youtube.com',
       returnDelayS: 3,
+      dissolve: dissolveOptions(),
     });
     parent.postMessage({ type: 'intercede-demo', patron: patron.slug }, '*');
     (function waitForVeil() {
@@ -60,6 +61,14 @@
       if (IntercedeDissolve.state !== 'veiled') { timer = setTimeout(waitForVeil, 250); return; }
       timer = setTimeout(() => { index = (index + 1) % PATRONS.length; play(); }, VEIL_MS);
     })();
+  }
+
+  // The landing page shrinks this frame to fit (to about a third on a phone), so draw at the size
+  // it's shown rather than the screen's full resolution, with bigger tiles when it's small.
+  function dissolveOptions() {
+    const shown = frameElement?.getBoundingClientRect().width || innerWidth;
+    const scale = Math.min(1, shown / innerWidth);
+    return { dpr: Math.max(1, Math.min(2, devicePixelRatio * scale)), tileSize: scale < 0.6 ? 16 : 10 };
   }
 
   addEventListener('message', event => {

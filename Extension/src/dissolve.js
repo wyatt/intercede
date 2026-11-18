@@ -18,6 +18,7 @@
     tileLife: 0.45,       // fraction of the duration each tile spends flying away
     origin: null,         // {x, y} the burst comes from (his raised hand); default bottom-left
     returnDelayS: 10,     // "Return anyway" stays locked this long (counted only while the tab is visible)
+    dpr: null,            // canvas resolution; default the screen's, capped at 2
   };
   const GOLD = '#E8C15A';
   const VEIL = '#F4ECD8';
@@ -104,7 +105,7 @@
     root.append(veil.layer);
 
     const reduced = opts.reducedMotion ?? matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (reduced) await fadeOut(snapshot, veil);
+    if (reduced) await fadeOut(snapshot, veil, opts);
     else await animateTiles(snapshot, veil, opts);
     if (state !== 'dissolving') return { ok: false, reason: 'released' };  // release() mid-effect
 
@@ -132,7 +133,7 @@
   //   scatter: with a snapshot of the page, tiles of it drift away and reveal the veil beneath.
   //   cover:   without one (capture failed), veil-coloured tiles settle over the live page.
   function animateTiles(snapshot, veil, opts) {
-    const dpr = window.devicePixelRatio || 1;
+    const dpr = opts.dpr ?? Math.min(window.devicePixelRatio || 1, 2);
     const W = innerWidth, H = innerHeight;
     const t = opts.tileSize;
     const base = canvas(W, H, dpr);      // the snapshot (scatter) or the growing veil (cover)
@@ -184,7 +185,6 @@
           else drawSettling(f, tile, q, t);
         }
         f.setTransform(dpr, 0, 0, dpr, 0, 0);
-        drawShockwave(f, origin, reach, p, W, H);
         drawFlash(f, origin, elapsed);
 
         if (next < tiles.length || live.length) {
@@ -243,22 +243,6 @@
     f.globalAlpha = 1;
   }
 
-  // A ring of gold pixels racing outwards from his hand, just ahead of the breaking edge.
-  function drawShockwave(f, origin, reach, p, W, H) {
-    const life = 0.7;
-    if (p >= life) return;
-    const r = (p / 0.62) * reach + 12;
-    f.globalAlpha = 1 - p / life;
-    f.fillStyle = GOLD;
-    const dots = Math.max(8, Math.floor((2 * Math.PI * r) / 14));
-    for (let i = 0; i < dots; i++) {
-      const a = (i / dots) * 2 * Math.PI;
-      const x = origin.x + Math.cos(a) * r, y = origin.y + Math.sin(a) * r;
-      if (x > -4 && x < W && y > -4 && y < H) f.fillRect(Math.round(x / 2) * 2, Math.round(y / 2) * 2, 4, 4);
-    }
-    f.globalAlpha = 1;
-  }
-
   // A brief pixel starburst at his hand.
   function drawFlash(f, origin, elapsed) {
     if (elapsed >= FLASH_MS) return;
@@ -285,8 +269,8 @@
   }
 
   // prefers-reduced-motion: no particles, just a short crossfade to the veil.
-  function fadeOut(snapshot, veil) {
-    const W = innerWidth, H = innerHeight, dpr = window.devicePixelRatio || 1;
+  function fadeOut(snapshot, veil, opts) {
+    const W = innerWidth, H = innerHeight, dpr = opts.dpr ?? Math.min(window.devicePixelRatio || 1, 2);
     const c = canvas(W, H, dpr);
     if (snapshot) {
       const g = c.getContext('2d'); g.scale(dpr, dpr); g.drawImage(snapshot, 0, 0, W, H);
