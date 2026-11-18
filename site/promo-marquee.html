@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Marquee promo tile</title>
+<!-- The Chrome Web Store marquee promo tile (1400×560), rendered to store/promo-marquee-1400x560.png. -->
+<style>
+  html, body { margin: 0; width: 1400px; height: 560px; overflow: hidden; }
+  body {
+    position: relative; background: #f4ecd8; color: #3b2a1a;
+    font: 800 46px/1 ui-monospace, "SF Mono", Menlo, "Cascadia Mono", Consolas, monospace;
+  }
+  .speck { position: absolute; width: 48px; height: 48px; background: #e9dcbc; }
+  .text { position: absolute; left: 96px; top: 0; bottom: 0; width: 580px; display: flex; flex-direction: column; justify-content: center; }
+  .text img { width: 120px; height: 120px; image-rendering: pixelated; border-radius: 26px; box-shadow: 0 4px 10px rgba(59, 42, 26, .18); }
+  h1 { margin: 26px 0 16px; font-size: 92px; letter-spacing: .02em; }
+  .tagline { margin: 0 0 14px; font-size: 26px; font-weight: 700; }
+  .sub { margin: 0; max-width: 500px; font-size: 20px; font-weight: 500; line-height: 1.5; color: #8a6a3a; }
+  .saints { position: absolute; right: 40px; bottom: 44px; display: flex; align-items: flex-end; gap: 0; }
+  .saint + .saint { margin-left: -26px; }
+  .saint { background-repeat: no-repeat; image-rendering: pixelated; }
+</style>
+</head>
+<body>
+  <i class="speck" style="left:24px;top:40px"></i><i class="speck" style="left:72px;top:88px"></i>
+  <i class="speck" style="left:660px;top:-8px"></i><i class="speck" style="left:708px;top:40px"></i>
+  <i class="speck" style="left:1280px;top:24px"></i><i class="speck" style="left:1328px;top:-24px"></i>
+  <i class="speck" style="left:40px;top:468px"></i><i class="speck" style="left:620px;top:452px"></i>
+  <div class="text">
+    <img src="ext/icon-128.png" alt="">
+    <h1>Intercede</h1>
+    <p class="tagline">A patron saint for your browser</p>
+    <p class="sub">Use up a site's daily allowance, and a saint walks on and sweeps the page away.</p>
+  </div>
+  <div class="saints" id="saints"></div>
+<script type="module">
+  import { PATRONS, LAYOUT } from './ext/patrons.js';
+  const order = ['isidore', 'clare', 'liguori', 'benedict', 'aquinas'];
+  for (const slug of order) {
+    const p = PATRONS.find(x => x.slug === slug), big = slug === 'liguori';
+    const h = big ? 252 : 168, k = h / LAYOUT.frameHeight, el = document.createElement('div');
+    el.className = 'saint';
+    el.style.width = `${LAYOUT.frameWidth * k}px`;
+    el.style.height = `${h}px`;
+    el.style.backgroundImage = `url(ext/patrons/${p.sheet}.png)`;
+    el.style.backgroundSize = `${LAYOUT.cols * LAYOUT.frameWidth * k}px ${LAYOUT.rows * LAYOUT.frameHeight * k}px`;
+    el.style.backgroundPosition = `0 ${-LAYOUT.clips.idle.row * LAYOUT.frameHeight * k}px`;
+    document.getElementById('saints').append(el);
+  }
+</script>
+</body>
+</html>
