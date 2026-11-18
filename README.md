@@ -8,7 +8,9 @@ The patrons: St. Alphonsus Liguori, St. Isidore of Seville, St. Clare of Assisi,
 
 ## Install
 
-Open `chrome://extensions`, turn on **Developer mode**, click **Load unpacked**, and choose the `Extension/` folder (or click its reload icon after changes). Settings open on first install.
+Get it from the [Chrome Web Store](https://chromewebstore.google.com/detail/intercede/mnihpmkigiabjkalbncnanlodlpbpool). Settings open on first install.
+
+To run from source, open `chrome://extensions`, turn on **Developer mode**, click **Load unpacked**, and choose the `Extension/` folder (or click its reload icon after changes).
 
 - **Popup:** today's time per site, and your patron; click the patron to send them onto the current tab.
 - **Settings:** your patron, tracked sites with daily limits, and how often the patron comes back.
